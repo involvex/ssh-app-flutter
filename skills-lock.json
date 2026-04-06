@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "skills": {
+    "architecture-feature-first": {
+      "source": "evanca/flutter-ai-rules",
+      "sourceType": "github",
+      "computedHash": "cabbcf49c637cab29ba4c66cc87a30b72dffb71638b8b81a183d2582c2dd9989"
+    },
+    "bloc": {
+      "source": "evanca/flutter-ai-rules",
+      "sourceType": "github",
+      "computedHash": "846d3267a624d187ac935fd8d74aaab1bbdeb6190a920221b6b6858a94892995"
+    },
+    "code-review": {
+      "source": "evanca/flutter-ai-rules",
+      "sourceType": "github",
+      "computedHash": "40aa6926942febbbcd8e4921637af8d8be9459e260c4f8b2dcbd4cc4d77ff9e5"
+    },
+    "dart-3-updates": {
+      "source": "evanca/flutter-ai-rules",
+      "sourceType": "github",
+      "computedHash": "e3ee347ed347a556babdb6fee084d6d1384a27dec0925bace02edd24efde6c94"
+    },
+    "dart-best-practices": {
+      "source": "kevmoo/dash_skills",
+      "sourceType": "github",
+      "computedHash": "2566cbf8afb7241892fc626cf6713692e12fad7acdbead07b2a278e403faf996"
+    },
+    "dart-checks-migration": {
+      "source": "kevmoo/dash_skills",
+      "sourceType": "github",
+      "computedHash": "b5b2dbf4b5c231f49ba0c233f665c13d4ca5a5309b28ba182c37a0ceb5d24723"
+    },
+    "dart-cli-app-best-practices": {
+      "source": "kevmoo/dash_skills",
+      "sourceType": "github",
+      "computedHash": "c741e4609cc9df7fe5e5094c2d52bfed9c241ac13b4d781f7180a8f3cf2ebd83"
+    },
+    "dart-doc-validation": {
+      "source": "kevmoo/dash_skills",
+      "sourceType": "github",
+      "computedHash": "ae44d7d0d328450262d04db4f20407058bba05be679e3fa5d0eaae250e105cd4"
+    },
+    "dart-matcher-best-practices": {
+      "source": "kevmoo/dash_skills",
+      "sourceType": "github",
+      "computedHash": "3d229cf53089e64d8b8bce81d7f840863e1e69e6fa9b814e673c4b1eb16a757b"
+    },
+    "dart-modern-features": {
+      "source": "kevmoo/dash_skills",
+      "sourceType": "github",
+      "computedHash": "c3cba8d49c1ecff7adc72df6b77ee4f1d974f4ec83533dc56ba13cb07990c304"
+    },
+    "dart-package-maintenance": {
+      "source": "kevmoo/dash_skills",
+      "sourceType": "github",
+      "computedHash": "f27f9cb771ee8d956c4154cc95f207e0bb9b7c8f2b2d36b6d5f08cd46a161cc8"
+    },
+    "dart-test-fundamentals": {
+      "source": "kevmoo/dash_skills",
+      "sourceType": "github",
+      "computedHash": "f5c17bf854f7db7c2f65c72842142276c0b1fbe2273e8a8e450b014137b21dfc"
+    },
+    "effective-dart": {
+      "source": "evanca/flutter-ai-rules",
+      "sourceType": "github",
+      "computedHash": "cf09b34d4245a543a46fbb97ec088815a7999f8e472eed1647b9a375da347d28"
+    },
+    "flutter-app-architecture": {
+      "source": "evanca/flutter-ai-rules",
+      "sourceType": "github",
+      "computedHash": "af30c7781ec9a57304331e756df098a64d2b57ad3a91d71af30423df54a89652"
+    },
+    "flutter-change-notifier": {
+      "source": "evanca/flutter-ai-rules",
+      "sourceType": "github",
+      "computedHash": "25890c78ad6b7f73f34c20b48753b347f0b3d58d05e61aa7d3411593c44cd206"
+    },
+    "flutter-errors": {
+      "source": "evanca/flutter-ai-rules",
+      "sourceType": "github",
+      "computedHash": "fea05ba6ebe674fdef67195d0ae1ab8742400055a55c6628876bc3ebf9fabfd6"
+    },
+    "mockito": {
+      "source": "evanca/flutter-ai-rules",
+      "sourceType": "github",
+      "computedHash": "bb1b9667e710132d4e314de6f361627a8513151e95ed4121ca80b30376c630af"
+    },
+    "mocktail": {
+      "source": "evanca/flutter-ai-rules",
+      "sourceType": "github",
+      "computedHash": "70e77df9076083c44a7e8f20cd45efc0839b8036ca290f65c1763abdf7d25cd9"
+    },
+    "patrol-e2e-testing": {
+      "source": "evanca/flutter-ai-rules",
+      "sourceType": "github",
+      "computedHash": "116727bb2d4265ed2c0ac6028904097b55087e5653acf4a88749e6edf0fb8c97"
+    },
+    "provider": {
+      "source": "evanca/flutter-ai-rules",
+      "sourceType": "github",
+      "computedHash": "df1350163648fb7085a925e5e6ba4106a54063890b874cfb6d7dc198a9ed7c59"
+    },
+    "testing": {
+      "source": "evanca/flutter-ai-rules",
+      "sourceType": "github",
+      "computedHash": "2dbd1010a15b10e294bab8c58e168658ce3287c2e3deb6adcdff36f26e1839dc"
+    }
+  }
+}
