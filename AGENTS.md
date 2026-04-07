@@ -6,7 +6,8 @@ Guidelines for agents operating on this Flutter SSH application codebase.
 
 - **Type**: Flutter Desktop/Mobile Application (SSH Server & Client)
 - **State Management**: Provider
-- **Architecture**: Screen/Widget/Provider separation in `lib/`
+- **Persistence**: shared_preferences (via ConfigService)
+- **Architecture**: Separated models, services, providers, screens, and widgets.
 
 ## Build Commands
 
@@ -23,11 +24,7 @@ flutter build ios          # iOS
 flutter build windows      # Windows
 flutter build macos        # macOS
 flutter build linux        # Linux
-flutter build web          # Web
-
-# Build in debug/release mode
-flutter build apk --debug
-flutter build apk --release
+flutter build web          # Web (if supported)
 ```
 
 ## Lint & Analysis
@@ -35,7 +32,6 @@ flutter build apk --release
 ```bash
 # Run static analysis (required before commits)
 flutter analyze
-flutter analyze --fix
 ```
 
 ## Testing
@@ -44,125 +40,66 @@ flutter analyze --fix
 # Run all tests
 flutter test
 
-# Run single test file
-flutter test test/widget_test.dart
-
-# Run tests matching a name pattern
-flutter test --name "smoke test"
-
 # Run tests in a specific directory
 flutter test test/
-
-# Run tests with verbose output
-flutter test -v
 ```
 
 ## Code Style Guidelines
 
 ### Import Conventions
 
-- Use `package:` prefix for project imports
-- Group imports: Dart SDK -> external packages -> project imports
-- Use empty line between groups
-- Sort alphabetically within groups
+- Use `package:` prefix for all project imports.
+- Grouping: Dart SDK -> external packages -> project imports.
+- Sort alphabetically within groups.
 
 ### Naming Conventions
 
-| Type | Convention | Example |
-|------|------------|---------|
-| Classes | PascalCase | `SSHProvider`, `HomeScreen` |
-| Enums | PascalCase | `ConnectionState` |
-| Methods | camelCase | `connectClient()`, `startServer()` |
-| Variables | camelCase | `isConnected`, `serverPort` |
-| Private members | prefix with `_` | `_client`, `_session` |
-| Constants | `k` prefix | `kDefaultPort` |
-| Files | snake_case | `ssh_provider.dart` |
+- **Classes**: PascalCase (e.g., `SSHProvider`).
+- **Methods/Variables**: camelCase (e.g., `connectClient()`).
+- **Private members**: Prefix with `_` (e.g., `_client`).
+- **Constants**: `k` prefix (e.g., `kDefaultPort`).
+- **Files**: snake_case (e.g., `ssh_provider.dart`).
 
 ### Type Annotations
 
-- Specify return types for methods
-- Prefer `final` over `var`
-- Use `const` constructors where possible
-
-```dart
-final SSHClient? _client;
-Terminal terminal = Terminal();
-Future<void> connectClient({required String host, required int port}) async {}
-```
-
-### Widgets & UI
-
-- Extract widgets into separate files
-- Use `const` constructors for static widgets
-- Follow Material Design guidelines
-
-```dart
-class SSHServerForm extends StatelessWidget {
-  const SSHServerForm({super.key});
-  @override
-  Widget build(BuildContext context) { ... }
-}
-```
-
-### Error Handling
-
-- Use try-catch for async operations
-- Log errors before rethrowing
-- Handle specific exception types when possible
-
-```dart
-try {
-  addLog('Connecting to $host:$port...');
-  final socket = await SSHSocket.connect(host, port);
-} catch (e) {
-  addLog('Connection failed: $e');
-  rethrow;
-}
-```
-
-### State Management (Provider)
-
-- Extend `ChangeNotifier`
-- Call `notifyListeners()` after state changes
-- Use `Consumer` or `Provider.of`
-- Dispose resources in `dispose()`
-
-```dart
-class SSHProvider extends ChangeNotifier {
-  bool isConnected = false;
-  void connect() { isConnected = true; notifyListeners(); }
-  @override void dispose() { _client?.close(); super.dispose(); }
-}
-```
+- Explicit return types for methods.
+- Prefer `final` over `var`.
+- Use `const` constructors for static widgets and constant data.
 
 ## Project Structure
 
-```
+```text
 lib/
-├── main.dart                 # App entry point
-├── screens/home_screen.dart  # Screen widgets
-├── widgets/                  # Reusable widgets
-│   ├── ssh_client_form.dart
-│   ├── ssh_server_form.dart
-│   └── log_viewer.dart
-├── providers/ssh_provider.dart
-test/widget_test.dart
+├── models/             # Data Models (SSHProfile, SSHKey, KeyboardShortcut, Snippet)
+├── services/           # Services (ConfigService, NetworkDiscoveryService, SSHKeyGenerator)
+├── providers/          # State Management (SSHProvider, SettingsProvider, SnippetProvider)
+├── screens/            # Main Screens (HomeScreen, SettingsScreen, SplashScreen)
+├── widgets/            # Reusable Widgets (KeyManager, ProfileManager, LogViewer, forms)
+└── main.dart           # App Entry Point
 ```
 
-## Working with SSH Provider
+## Working with Providers
 
-- `connectClient()` - Connect to remote SSH server
-- `startServer()` - Start local SSH server
-- `stopServer()` - Stop local server
-- `disconnectClient()` - Disconnect from server
-- `terminal` - xterm terminal for PTY
-- `connectionLog` - List of connection events
+### SSHProvider
+- `connectClient({required SSHProfile profile})` - Connect to a remote SSH server using a profile.
+- `startServer({required int port})` - Start local SSH server.
+- `terminal` - The current active `Terminal` instance (xterm).
+- `connectionLog` - List of strings for displaying logs in UI.
+
+### SettingsProvider
+- `themeMode` - Current application theme (Light/Dark/System).
+- `accentColor` - Primary application accent color.
+- `updateTheme(ThemeMode mode)` - Change app theme.
+
+### SnippetProvider
+- `snippets` - List of saved command fragments.
+- `addSnippet(Snippet snippet)` - Create new snippet.
 
 ## Best Practices
 
-1. Run `flutter analyze` before committing
-2. Test changes on at least one platform
-3. Use meaningful variable/method names
-4. Keep widgets small and focused
-5. Handle loading and error states
-6. Clean up resources in `dispose()` methods
+1. **Always use ConfigService** for persistence. Do not call `shared_preferences` directly from widgets.
+2. **Handle Async Safety**: Use `try-catch` for all SSH and network operations.
+3. **Notify Listeners**: Ensure `notifyListeners()` is called in providers after state changes.
+4. **UI Decoupling**: Keep business logic in providers/services; widgets should only handle display and user interaction.
+5. **Clean Resources**: Always implement `dispose()` in providers to close sockets, PTYs, and timers.
+6. **Strict Typing**: Maintain `strict-casts` and `strict-raw-types` compliance.

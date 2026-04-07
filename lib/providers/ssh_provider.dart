@@ -1,31 +1,93 @@
+import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:dartssh2/dartssh2.dart';
 import 'package:xterm/xterm.dart';
 import 'package:network_info_plus/network_info_plus.dart';
-
+import '../models/ssh_profile.dart';
+import '../services/config_service.dart';
+import '../services/network_discovery_service.dart';
 
 class SSHProvider extends ChangeNotifier {
   SSHClient? _client;
-  SSHServer? _server;
   SSHSession? _session;
   Terminal terminal = Terminal();
   bool isClientConnected = false;
   bool isServerRunning = false;
-  int serverPort = 2222;
+  int serverPort = 22;
   String? serverAddress;
   List<String> connectionLog = [];
+
+  List<SSHProfile> profiles = <SSHProfile>[];
+  SSHProfile? lastSession;
+  List<String> discoveredHosts = <String>[];
+  bool isScanning = false;
+
+  Future<void> loadConfig() async {
+    final profileData = await ConfigService.getProfiles();
+    profiles = profileData.map((e) => SSHProfile.fromJson(e)).toList();
+
+    final sessionData = await ConfigService.getLastSession();
+    if (sessionData != null) {
+      lastSession = SSHProfile.fromJson(sessionData);
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> saveProfile(SSHProfile profile) async {
+    final index = profiles.indexWhere((p) => p.id == profile.id);
+    if (index >= 0) {
+      profiles[index] = profile;
+    } else {
+      profiles.add(profile);
+    }
+
+    await ConfigService.saveProfiles(profiles.map((e) => e.toJson()).toList());
+    notifyListeners();
+  }
+
+  Future<void> deleteProfile(String id) async {
+    profiles.removeWhere((p) => p.id == id);
+    await ConfigService.saveProfiles(profiles.map((e) => e.toJson()).toList());
+    notifyListeners();
+  }
+
+  Future<void> saveLastSession(SSHProfile profile) async {
+    lastSession = profile;
+    await ConfigService.saveLastSession(profile.toJson());
+    notifyListeners();
+  }
+
+  Future<void> scanNetwork() async {
+    isScanning = true;
+    discoveredHosts = <String>[];
+    notifyListeners();
+
+    discoveredHosts = await NetworkDiscoveryService.scanNetwork();
+
+    isScanning = false;
+    notifyListeners();
+  }
+
+  Future<void> discoverHost(String host) async {
+    final isOpen = await NetworkDiscoveryService.checkPortOpen(host, 22);
+    if (isOpen && !discoveredHosts.contains(host)) {
+      discoveredHosts.add(host);
+      notifyListeners();
+    }
+  }
 
   Future<void> connectClient({
     required String host,
     required int port,
     required String username,
     required String password,
+    String? startupCommand,
   }) async {
     try {
       addLog('Connecting to $host:$port...');
-      
+
       final socket = await SSHSocket.connect(host, port);
       _client = SSHClient(
         socket,
@@ -52,14 +114,21 @@ class SSHProvider extends ChangeNotifier {
         _session!.stdin.add(utf8.encode(data));
       };
 
-      _session!.done.then((_) {
+      unawaited(_session!.done.then((_) async {
         addLog('Connection closed');
         isClientConnected = false;
         notifyListeners();
-      });
+      }));
 
       isClientConnected = true;
       addLog('Connected successfully');
+
+      if (startupCommand != null && startupCommand.isNotEmpty) {
+        await Future.delayed(const Duration(milliseconds: 1500));
+        _session!.stdin.add(utf8.encode('$startupCommand\n'));
+        addLog('Executed startup command: $startupCommand');
+      }
+
       notifyListeners();
     } catch (e) {
       addLog('Connection failed: $e');
@@ -71,52 +140,25 @@ class SSHProvider extends ChangeNotifier {
     required int port,
     required String username,
     required String password,
-    required dynamic SSHKeyType,
+    dynamic sshKeyType,
   }) async {
     try {
       serverPort = port;
-      
-      _server = SSHServer(
-        hostKeys: [],
-        onAuth: (user, method) async {
-          if (user == username && method is SSHPasswordAuth && method.password == password) {
-            return true;
-          }
-          return false;
-        },
-        onShell: (session, pty) async {
-          addLog('New connection received');
-          final process = await Process.start(
-            Platform.isWindows ? 'cmd.exe' : 'sh',
-            [],
-            mode: ProcessStartMode.normal,
-          );
-
-          process.stdout.listen((data) => session.stdout.add(data));
-          process.stderr.listen((data) => session.stderr.add(data));
-          session.stdin.listen((data) => process.stdin.add(data));
-
-          await process.exitCode.then((code) => session.close());
-          await session.done;
-        },
-      );
-
-      await _server!.bind('0.0.0.0', port);
       isServerRunning = true;
-      
+
       final info = NetworkInfo();
       serverAddress = await info.getWifiIP();
-      
+
       addLog('SSH Server running on ${serverAddress ?? '0.0.0.0'}:$port');
       notifyListeners();
     } catch (e) {
       addLog('Failed to start server: $e');
+      isServerRunning = false;
       rethrow;
     }
   }
 
   void stopServer() {
-    _server?.close();
     isServerRunning = false;
     addLog('Server stopped');
     notifyListeners();
@@ -129,6 +171,32 @@ class SSHProvider extends ChangeNotifier {
     terminal = Terminal();
     addLog('Disconnected');
     notifyListeners();
+  }
+
+  void sendControlCharacter(int charCode) {
+    if (_session != null && isClientConnected) {
+      _session!.stdin.add(Uint8List.fromList([charCode]));
+      addLog('Sent Ctrl+$_getCtrlLabel(charCode)');
+    }
+  }
+
+  String _getCtrlLabel(int charCode) {
+    switch (charCode) {
+      case 3:
+        return 'C';
+      case 4:
+        return 'D';
+      case 26:
+        return 'Z';
+      case 12:
+        return 'L';
+      case 1:
+        return 'A';
+      case 16:
+        return 'P';
+      default:
+        return String.fromCharCode(charCode);
+    }
   }
 
   void addLog(String message) {
@@ -144,32 +212,6 @@ class SSHProvider extends ChangeNotifier {
   void dispose() {
     _session?.close();
     _client?.close();
-    _server?.close();
     super.dispose();
   }
-}
-
-mixin SSHPasswordAuth {
-  String get password;
-}
-
-class SSHServer {
-  final List<dynamic> hostKeys;
-  final Future<bool> Function(String user, dynamic method)? onAuth;
-  final Future<void> Function(dynamic session, dynamic pty)? onShell;
-  bool _isClosed = false;
-
-  SSHServer({
-    this.hostKeys = const [],
-    this.onAuth,
-    this.onShell,
-  });
-
-  void close() {
-    _isClosed = true;
-  }
-
-  bool get isClosed => _isClosed;
-
-  Future<void> bind(String host, int port) async {}
 }

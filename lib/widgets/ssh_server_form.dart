@@ -11,7 +11,7 @@ class SSHServerForm extends StatefulWidget {
 
 class _SSHServerFormState extends State<SSHServerForm> {
   final _formKey = GlobalKey<FormState>();
-  final _portController = TextEditingController(text: '2222');
+  final _portController = TextEditingController(text: '22');
   final _usernameController = TextEditingController(text: 'user');
   final _passwordController = TextEditingController(text: 'password');
   bool _isLoading = false;
@@ -50,27 +50,7 @@ class _SSHServerFormState extends State<SSHServerForm> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _isLoading ? null : () async {
-                if (_formKey.currentState!.validate()) {
-                  setState(() => _isLoading = true);
-                  try {
-                    await ssh.startServer(
-                      port: int.parse(_portController.text),
-                      username: _usernameController.text,
-                      password: _passwordController.text, SSHKeyType: null,
-                    );
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
-                      );
-                    }
-                  }
-                  if (mounted) {
-                    setState(() => _isLoading = false);
-                  }
-                }
-              },
+              onPressed: _isLoading ? null : () => _startServer(ssh),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
               child: _isLoading 
                 ? const CircularProgressIndicator(color: Colors.white) 
@@ -80,6 +60,28 @@ class _SSHServerFormState extends State<SSHServerForm> {
         ),
       ),
     );
+  }
+
+  Future<void> _startServer(SSHProvider ssh) async {
+    if (_formKey.currentState!.validate()) {
+      final messenger = ScaffoldMessenger.of(context);
+      setState(() => _isLoading = true);
+      try {
+        await ssh.startServer(
+          port: int.parse(_portController.text),
+          username: _usernameController.text,
+          password: _passwordController.text,
+          sshKeyType: null,
+        );
+      } catch (e) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override

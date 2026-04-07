@@ -1,0 +1,203 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/ssh_provider.dart';
+import '../models/ssh_profile.dart';
+
+class ConnectionModal extends StatefulWidget {
+  const ConnectionModal({super.key});
+
+  @override
+  State<ConnectionModal> createState() => _ConnectionModalState();
+}
+
+class _ConnectionModalState extends State<ConnectionModal> {
+  final _formKey = GlobalKey<FormState>();
+  final _hostController = TextEditingController();
+  final _portController = TextEditingController(text: '22');
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _startupCommandController = TextEditingController();
+  bool _isLoading = false;
+  bool _isServer = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLastSession();
+  }
+
+  void _loadLastSession() {
+    final ssh = Provider.of<SSHProvider>(context, listen: false);
+    if (ssh.lastSession != null) {
+      final session = ssh.lastSession!;
+      _hostController.text = session.host;
+      _portController.text = session.port.toString();
+      _usernameController.text = session.username;
+      _passwordController.text = session.password ?? '';
+      _startupCommandController.text = session.startupCommand ?? '';
+      _isServer = session.isServer;
+    } else {
+      _hostController.text = 'localhost';
+      _usernameController.text = 'user';
+      _passwordController.text = 'password';
+    }
+  }
+
+  Future<void> _connect(SSHProvider ssh) async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    final profile = SSHProfile(
+      name: 'Last Session',
+      host: _hostController.text,
+      port: int.tryParse(_portController.text) ?? 22,
+      username: _usernameController.text,
+      password: _passwordController.text,
+      isServer: _isServer,
+      startupCommand: _startupCommandController.text.isNotEmpty ? _startupCommandController.text : null,
+    );
+
+    await ssh.saveLastSession(profile);
+
+    try {
+      if (_isServer) {
+        await ssh.startServer(
+          port: profile.port,
+          username: profile.username,
+          password: profile.password ?? '',
+          sshKeyType: null,
+        );
+      } else {
+        await ssh.connectClient(
+          host: profile.host,
+          port: profile.port,
+          username: profile.username,
+          password: profile.password ?? '',
+          startupCommand: profile.startupCommand,
+        );
+      }
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ssh = Provider.of<SSHProvider>(context, listen: false);
+
+    return AlertDialog(
+      backgroundColor: const Color(0xFF16213E),
+      title: const Text('SSH Connection'),
+      content: SizedBox(
+        width: 400,
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                SwitchListTile(
+                  title: const Text('Server Mode'),
+                  value: _isServer,
+                  onChanged: (value) {
+                    setState(() => _isServer = value);
+                  },
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _hostController,
+                  decoration: const InputDecoration(
+                    labelText: 'Host',
+                    hintText: 'localhost or IP address',
+                  ),
+                  validator: (value) => value!.isEmpty ? 'Required' : null,
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _portController,
+                  decoration: const InputDecoration(
+                    labelText: 'Port',
+                    hintText: '22',
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value!.isEmpty) return 'Required';
+                    final port = int.tryParse(value);
+                    if (port == null || port < 1 || port > 65535) {
+                      return 'Invalid port';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _usernameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Username',
+                    hintText: 'root',
+                  ),
+                  validator: (value) => value!.isEmpty ? 'Required' : null,
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                  ),
+                  obscureText: true,
+                  validator: (value) => value!.isEmpty ? 'Required' : null,
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _startupCommandController,
+                  decoration: const InputDecoration(
+                    labelText: 'Startup Command (optional)',
+                    hintText: 'e.g., ls -la, pwd, whoami',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: _isLoading ? null : () => _connect(ssh),
+          child: _isLoading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(_isServer ? 'Start Server' : 'Connect'),
+        ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _hostController.dispose();
+    _portController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    _startupCommandController.dispose();
+    super.dispose();
+  }
+}

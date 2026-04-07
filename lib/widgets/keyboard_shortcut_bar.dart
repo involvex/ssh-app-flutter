@@ -1,0 +1,215 @@
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../models/keyboard_shortcut.dart';
+import '../providers/settings_provider.dart';
+import '../providers/ssh_provider.dart';
+import 'connection_modal.dart';
+import 'profile_manager.dart';
+import 'network_discovery.dart';
+import 'key_manager.dart';
+
+class KeyboardShortcutBar extends StatelessWidget {
+  const KeyboardShortcutBar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    if (Platform.isAndroid || Platform.isIOS) {
+      return const SizedBox.shrink();
+    }
+
+    return Consumer2<SettingsProvider, SSHProvider>(
+      builder: (context, settings, ssh, child) {
+        if (!settings.isLoaded) {
+          return const SizedBox.shrink();
+        }
+
+        final maxRow = settings.maxRow;
+        return Column(
+          children: List.generate(maxRow + 1, (rowIndex) {
+            final shortcuts = settings.getShortcutsByRow(rowIndex);
+            return _ShortcutRow(
+              shortcuts: shortcuts,
+              isConnected: ssh.isClientConnected,
+            );
+          }),
+        );
+      },
+    );
+  }
+}
+
+class _ShortcutRow extends StatelessWidget {
+  final List<KeyboardShortcut> shortcuts;
+  final bool isConnected;
+
+  const _ShortcutRow({
+    required this.shortcuts,
+    required this.isConnected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF16213E),
+        border: Border(
+          bottom: BorderSide(color: Colors.grey.shade800),
+        ),
+      ),
+      child: Row(
+        children: [
+          ...shortcuts.map((s) => _ShortcutChip(
+                shortcut: s,
+                isConnected: isConnected,
+              )),
+          const Spacer(),
+        ],
+      ),
+    );
+  }
+}
+
+class _ShortcutChip extends StatelessWidget {
+  final KeyboardShortcut shortcut;
+  final bool isConnected;
+
+  const _ShortcutChip({
+    required this.shortcut,
+    required this.isConnected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 12),
+      child: InkWell(
+        onTap: () => _handleTap(context),
+        borderRadius: BorderRadius.circular(4),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.grey[700],
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: Colors.grey.shade600),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                shortcut.label,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontFamily: 'monospace',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                shortcut.description,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade400,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _handleTap(BuildContext context) {
+    final ssh = context.read<SSHProvider>();
+    final homeState = context.findAncestorStateOfType<State>();
+
+    switch (shortcut.action) {
+      case ShortcutAction.newConnection:
+        if (homeState != null && homeState.mounted) {
+          _showConnectionModal(homeState.context);
+        }
+        break;
+      case ShortcutAction.profiles:
+        if (homeState != null && homeState.mounted) {
+          _showProfileManager(homeState.context);
+        }
+        break;
+      case ShortcutAction.discovery:
+        if (homeState != null && homeState.mounted) {
+          _showNetworkDiscovery(homeState.context);
+        }
+        break;
+      case ShortcutAction.keys:
+        if (homeState != null && homeState.mounted) {
+          _showKeyManager(homeState.context);
+        }
+        break;
+      case ShortcutAction.tabChar:
+        if (isConnected && shortcut.charCode != null) {
+          ssh.sendControlCharacter(shortcut.charCode!);
+        }
+        break;
+      case ShortcutAction.ctrlC:
+      case ShortcutAction.ctrlD:
+      case ShortcutAction.ctrlZ:
+      case ShortcutAction.ctrlL:
+      case ShortcutAction.ctrlA:
+      case ShortcutAction.ctrlP:
+        if (isConnected && shortcut.charCode != null) {
+          ssh.sendControlCharacter(shortcut.charCode!);
+        }
+        break;
+      case ShortcutAction.arrowUp:
+        if (isConnected) ssh.terminal.write('\x1b[A');
+        break;
+      case ShortcutAction.arrowDown:
+        if (isConnected) ssh.terminal.write('\x1b[B');
+        break;
+      case ShortcutAction.arrowRight:
+        if (isConnected) ssh.terminal.write('\x1b[C');
+        break;
+      case ShortcutAction.arrowLeft:
+        if (isConnected) ssh.terminal.write('\x1b[D');
+        break;
+      case ShortcutAction.home:
+        if (isConnected) ssh.terminal.write('\x1b[H');
+        break;
+      case ShortcutAction.end:
+        if (isConnected) ssh.terminal.write('\x1b[F');
+        break;
+      }
+  }
+
+  void _showConnectionModal(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => const ConnectionModal(),
+    );
+  }
+
+  void _showProfileManager(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => const ProfileManager(),
+    );
+  }
+
+  void _showNetworkDiscovery(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => const NetworkDiscoverySheet(),
+    );
+  }
+
+  void _showKeyManager(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => const KeyManager(),
+    );
+  }
+}
