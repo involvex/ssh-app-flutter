@@ -13,49 +13,60 @@ class ThemePicker extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Theme Mode',
+              'Theme Preset',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 12),
-            SegmentedButton<ThemeMode>(
-              segments: const [
-                ButtonSegment<ThemeMode>(
-                  value: ThemeMode.system,
-                  label: Text('System'),
-                  icon: Icon(Icons.settings_suggest),
-                ),
-                ButtonSegment<ThemeMode>(
-                  value: ThemeMode.light,
-                  label: Text('Light'),
-                  icon: Icon(Icons.light_mode),
-                ),
-                ButtonSegment<ThemeMode>(
-                  value: ThemeMode.dark,
-                  label: Text('Dark'),
-                  icon: Icon(Icons.dark_mode),
-                ),
-              ],
-              selected: {settings.themeMode},
-              onSelectionChanged: (Set<ThemeMode> newSelection) {
-                settings.setThemeMode(newSelection.first);
-              },
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SegmentedButton<AppTheme>(
+                segments: const [
+                  ButtonSegment<AppTheme>(
+                    value: AppTheme.system,
+                    label: Text('System'),
+                    icon: Icon(Icons.settings_suggest),
+                  ),
+                  ButtonSegment<AppTheme>(
+                    value: AppTheme.light,
+                    label: Text('Light'),
+                    icon: Icon(Icons.light_mode),
+                  ),
+                  ButtonSegment<AppTheme>(
+                    value: AppTheme.dark,
+                    label: Text('Dark'),
+                    icon: Icon(Icons.dark_mode),
+                  ),
+                  ButtonSegment<AppTheme>(
+                    value: AppTheme.hacker,
+                    label: Text('Hacker'),
+                    icon: Icon(Icons.terminal),
+                  ),
+                ],
+                selected: {settings.appTheme},
+                onSelectionChanged: (Set<AppTheme> newSelection) {
+                  settings.setAppTheme(newSelection.first);
+                },
+              ),
             ),
-            const SizedBox(height: 24),
-            const Text(
-              'Accent Color',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 12,
-              children: [
-                _ColorOption(color: Colors.blue, current: settings.accentColor),
-                _ColorOption(color: Colors.green, current: settings.accentColor),
-                _ColorOption(color: Colors.purple, current: settings.accentColor),
-                _ColorOption(color: Colors.orange, current: settings.accentColor),
-                _ColorOption(color: Colors.red, current: settings.accentColor),
-              ],
-            ),
+            if (settings.appTheme != AppTheme.hacker) ...[
+              const SizedBox(height: 24),
+              const Text(
+                'Accent Color',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  _ColorOption(color: Colors.blue, current: settings.accentColor),
+                  _ColorOption(color: Colors.green, current: settings.accentColor),
+                  _ColorOption(color: Colors.purple, current: settings.accentColor),
+                  _ColorOption(color: Colors.orange, current: settings.accentColor),
+                  _ColorOption(color: Colors.red, current: settings.accentColor),
+                ],
+              ),
+            ],
           ],
         );
       },

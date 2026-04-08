@@ -124,8 +124,17 @@ class SSHProvider extends ChangeNotifier {
       addLog('Connected successfully');
 
       if (startupCommand != null && startupCommand.isNotEmpty) {
-        await Future.delayed(const Duration(milliseconds: 1500));
-        _session!.stdin.add(utf8.encode('$startupCommand\n'));
+        // Wait for the shell to emit some stdout (shell prompt) before sending
+        // the startup command so it is accepted immediately without needing
+        // an extra Enter from the user. If no output appears within timeout,
+        // still send the command.
+        try {
+          await _session!.stdout.first.timeout(const Duration(seconds: 3));
+        } catch (_) {
+          // ignore timeout
+        }
+        // Send CR to ensure the command is executed as expected by many shells
+        _session!.stdin.add(utf8.encode('$startupCommand\r'));
         addLog('Executed startup command: $startupCommand');
       }
 

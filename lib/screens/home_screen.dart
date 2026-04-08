@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:xterm/xterm.dart';
 import 'package:xterm/ui.dart';
 import '../providers/ssh_provider.dart';
+import '../providers/settings_provider.dart';
 import '../widgets/ssh_client_form.dart';
 import '../widgets/ssh_server_form.dart';
 import '../widgets/log_viewer.dart';
@@ -14,8 +15,8 @@ import '../widgets/connection_modal.dart';
 import '../widgets/network_discovery.dart';
 import '../widgets/ctrl_button_panel.dart';
 import '../widgets/snippet_button_panel.dart';
-import '../widgets/snippet_manager.dart';
 import '../screens/settings_screen.dart';
+import '../screens/snippet_config_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -54,7 +55,62 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _showConnectionModal() {
+  void _showConnectionModal() async {
+    final ssh = Provider.of<SSHProvider>(context, listen: false);
+
+    // If we have a last session saved, try quick-connect using it.
+    if (ssh.lastSession != null) {
+      final session = ssh.lastSession!;
+
+      // Show a small progress dialog while connecting
+      // ignore: unawaited_futures
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          backgroundColor: Color(0xFF16213E),
+          content: Row(
+            children: [
+              SizedBox(width: 24, height: 24, child: CircularProgressIndicator()),
+              SizedBox(width: 16),
+              Text('Connecting...'),
+            ],
+          ),
+        ),
+      );
+
+      try {
+        if (session.isServer) {
+          await ssh.startServer(
+            port: session.port,
+            username: session.username,
+            password: session.password ?? '',
+            sshKeyType: null,
+          );
+        } else {
+          await ssh.connectClient(
+            host: session.host,
+            port: session.port,
+            username: session.username,
+            password: session.password ?? '',
+            startupCommand: session.startupCommand,
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          );
+        }
+      } finally {
+        if (mounted) Navigator.of(context).pop();
+      }
+
+      return;
+    }
+
+    // No last session — show the connection modal so the user can enter details.
+    // ignore: unawaited_futures
     showDialog<void>(
       context: context,
       builder: (context) => const ConnectionModal(),
@@ -85,24 +141,47 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showSnippetManager() {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => const SnippetManager(),
+  void _showSnippetConfig() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SnippetConfigScreen()),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return KeyboardListener(
-      focusNode: FocusNode()..requestFocus(),
+      focusNode: FocusNode()..requestFocus(), // Request focus so keyboard listener receives events
       onKeyEvent: _handleKeyEvent,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('SSH App'),
-          centerTitle: true,
           actions: <Widget>[
+            IconButton(
+              icon: const Icon(Icons.code),
+              tooltip: 'Manage Snippets',
+              onPressed: _showSnippetConfig,
+            ),
+            IconButton(
+              icon: const Icon(Icons.search),
+              tooltip: 'Network Discovery',
+              onPressed: _showNetworkDiscovery,
+            ),
+            IconButton(
+              icon: const Icon(Icons.key),
+              tooltip: 'Keys',
+              onPressed: _showKeyManager,
+            ),
+            IconButton(
+              icon: const Icon(Icons.person),
+              tooltip: 'Profiles',
+              onPressed: _showProfileManager,
+            ),
+            IconButton(
+              icon: const Icon(Icons.add),
+              tooltip: 'Connect',
+              onPressed: _showConnectionModal,
+            ),
             IconButton(
               icon: const Icon(Icons.settings),
               tooltip: 'Settings',
@@ -113,58 +192,33 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
-            IconButton(
-              icon: const Icon(Icons.code),
-              tooltip: 'Snippets',
-              onPressed: _showSnippetManager,
+          ],
+        ),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _selectedIndex,
+          onDestinationSelected: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+          destinations: const <NavigationDestination>[
+            NavigationDestination(
+              icon: Icon(Icons.computer),
+              label: 'Client',
             ),
-            IconButton(
-              icon: const Icon(Icons.search),
-              tooltip: 'Network Discovery (Ctrl+D)',
-              onPressed: _showNetworkDiscovery,
+            NavigationDestination(
+              icon: Icon(Icons.dns),
+              label: 'Server',
             ),
-            IconButton(
-              icon: const Icon(Icons.key),
-              tooltip: 'Key Manager (Ctrl+K)',
-              onPressed: _showKeyManager,
-            ),
-            IconButton(
-              icon: const Icon(Icons.person),
-              tooltip: 'Profiles (Ctrl+P)',
-              onPressed: _showProfileManager,
-            ),
-            IconButton(
-              icon: const Icon(Icons.add),
-              tooltip: 'New Connection (Ctrl+N)',
-              onPressed: _showConnectionModal,
+            NavigationDestination(
+              icon: Icon(Icons.article),
+              label: 'Logs',
             ),
           ],
         ),
         body: Column(
           children: [
             const KeyboardShortcutBar(),
-            NavigationBar(
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: (index) {
-                setState(() {
-                  _selectedIndex = index;
-                });
-              },
-              destinations: const <NavigationDestination>[
-                NavigationDestination(
-                  icon: Icon(Icons.computer),
-                  label: 'Client',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.dns),
-                  label: 'Server',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.article),
-                  label: 'Logs',
-                ),
-              ],
-            ),
             Expanded(
               child: IndexedStack(
                 index: _selectedIndex,
@@ -187,31 +241,70 @@ class ClientTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SSHProvider>(
-      builder: (context, ssh, child) {
+    return Consumer2<SSHProvider, SettingsProvider>(
+      builder: (context, ssh, settings, child) {
+        final isHacker = settings.appTheme == AppTheme.hacker;
+        
         return Column(
           children: <Widget>[
             if (!ssh.isClientConnected)
               const Expanded(child: SSHClientForm())
             else
               Expanded(
-                child: TerminalView(
-                  ssh.terminal,
-                  padding: const EdgeInsets.all(8),
-                  textStyle: const TerminalStyle(
-                    fontSize: 12,
-                    fontFamily: 'Courier New',
+                child: Container(
+                  color: isHacker ? Colors.black : null,
+                  child: Builder(
+                    builder: (context) {
+                      final terminalTheme = isHacker
+                          ? const TerminalTheme(
+                              cursor: Color(0XFFAEAFAD),
+                              selection: Color(0XFFAEAFAD),
+                              foreground: Colors.greenAccent,
+                              background: Color(0XFF000000),
+                              black: Color(0XFF000000),
+                              red: Color(0XFFCD3131),
+                              green: Color(0XFF0DBC79),
+                              yellow: Color(0XFFE5E510),
+                              blue: Color(0XFF2472C8),
+                              magenta: Color(0XFFBC3FBC),
+                              cyan: Color(0XFF11A8CD),
+                              white: Color(0XFFE5E5E5),
+                              brightBlack: Color(0XFF666666),
+                              brightRed: Color(0XFFF14C4C),
+                              brightGreen: Color(0XFF23D18B),
+                              brightYellow: Color(0XFFF5F543),
+                              brightBlue: Color(0XFF3B8EEA),
+                              brightMagenta: Color(0XFFD670D6),
+                              brightCyan: Color(0XFF29B8DB),
+                              brightWhite: Color(0XFFFFFFFF),
+                              searchHitBackground: Color(0XFFFFFF2B),
+                              searchHitBackgroundCurrent: Color(0XFF31FF26),
+                              searchHitForeground: Color(0XFF000000),
+                            )
+                          : TerminalThemes.defaultTheme;
+
+                      return TerminalView(
+                        ssh.terminal,
+                        padding: const EdgeInsets.all(8),
+                        theme: terminalTheme,
+                        textStyle: TerminalStyle(
+                          fontSize: 14,
+                          fontFamily: 'monospace',
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
             if (ssh.isClientConnected)
               const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     CtrlButtonPanel(),
-                    SizedBox(width: 16),
                     SnippetButtonPanel(),
                   ],
                 ),
@@ -219,10 +312,14 @@ class ClientTab extends StatelessWidget {
             if (ssh.isClientConnected)
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
+                child: OutlinedButton.icon(
                   onPressed: () => ssh.disconnectClient(),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  child: const Text('Disconnect'),
+                  icon: const Icon(Icons.close),
+                  label: const Text('Disconnect'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    side: const BorderSide(color: Colors.red),
+                  ),
                 ),
               ),
           ],
@@ -246,21 +343,34 @@ class ServerTab extends StatelessWidget {
             else
               Expanded(
                 child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      const Icon(Icons.check_circle, color: Colors.green, size: 64),
-                      const SizedBox(height: 16),
-                      const Text('SSH Server is Running', style: TextStyle(fontSize: 18)),
-                      const SizedBox(height: 8),
-                      Text('Address: ${ssh.serverAddress ?? '0.0.0.0'}:${ssh.serverPort}'),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: () => ssh.stopServer(),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                        child: const Text('Stop Server'),
+                  child: Card(
+                    margin: const EdgeInsets.all(32),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          const Icon(Icons.check_circle, color: Colors.green, size: 64),
+                          const SizedBox(height: 16),
+                          Text(
+                            'SSH Server is Running',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Address: ${ssh.serverAddress ?? '0.0.0.0'}:${ssh.serverPort}',
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                          const SizedBox(height: 32),
+                          FilledButton.icon(
+                            onPressed: () => ssh.stopServer(),
+                            icon: const Icon(Icons.stop),
+                            label: const Text('Stop Server'),
+                            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),

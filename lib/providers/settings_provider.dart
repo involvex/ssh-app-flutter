@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import '../models/keyboard_shortcut.dart';
 import '../services/config_service.dart';
 
+enum AppTheme { system, light, dark, hacker }
+
 class SettingsProvider extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.dark;
+  AppTheme _appTheme = AppTheme.dark;
   Color _accentColor = Colors.blue;
   List<KeyboardShortcut> _shortcuts = [];
   bool _isLoaded = false;
 
   ThemeMode get themeMode => _themeMode;
+  AppTheme get appTheme => _appTheme;
   Color get accentColor => _accentColor;
   List<KeyboardShortcut> get shortcuts => _shortcuts;
   bool get isLoaded => _isLoaded;
@@ -22,12 +26,18 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> loadSettings() async {
     final settings = await ConfigService.getSettings();
     
-    final themeModeStr = settings['themeMode'] as String? ?? 'dark';
-    _themeMode = switch (themeModeStr) {
-      'light' => ThemeMode.light,
-      'dark' => ThemeMode.dark,
-      'system' => ThemeMode.system,
-      _ => ThemeMode.dark,
+    final themeStr = settings['appTheme'] as String? ?? 'dark';
+    _appTheme = AppTheme.values.firstWhere(
+      (e) => e.name == themeStr,
+      orElse: () => AppTheme.dark,
+    );
+
+    // Sync themeMode with appTheme for standard modes
+    _themeMode = switch (_appTheme) {
+      AppTheme.light => ThemeMode.light,
+      AppTheme.dark => ThemeMode.dark,
+      AppTheme.system => ThemeMode.system,
+      AppTheme.hacker => ThemeMode.dark, // Hacker is always dark
     };
 
     final accentColorStr = settings['accentColor'] as String? ?? 'blue';
@@ -50,14 +60,26 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setAppTheme(AppTheme theme) async {
+    _appTheme = theme;
+    _themeMode = switch (theme) {
+      AppTheme.light => ThemeMode.light,
+      AppTheme.dark => ThemeMode.dark,
+      AppTheme.system => ThemeMode.system,
+      AppTheme.hacker => ThemeMode.dark,
+    };
+    await _saveSetting('appTheme', theme.name);
+    notifyListeners();
+  }
+
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
-    final modeStr = switch (mode) {
-      ThemeMode.light => 'light',
-      ThemeMode.dark => 'dark',
-      ThemeMode.system => 'system',
+    _appTheme = switch (mode) {
+      ThemeMode.light => AppTheme.light,
+      ThemeMode.dark => AppTheme.dark,
+      ThemeMode.system => AppTheme.system,
     };
-    await _saveSetting('themeMode', modeStr);
+    await _saveSetting('appTheme', _appTheme.name);
     notifyListeners();
   }
 

@@ -12,15 +12,6 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  MaterialColor _getMaterialColor(Color color) {
-    if (color == Colors.blue) return Colors.blue;
-    if (color == Colors.green) return Colors.green;
-    if (color == Colors.purple) return Colors.purple;
-    if (color == Colors.orange) return Colors.orange;
-    if (color == Colors.red) return Colors.red;
-    return Colors.blue;
-  }
-
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -31,29 +22,70 @@ class MyApp extends StatelessWidget {
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, child) {
-          final materialColor = _getMaterialColor(settings.accentColor);
+          // Standard light theme
+          final lightTheme = ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: settings.accentColor,
+              brightness: Brightness.light,
+            ),
+          );
+
+          // Standard dark theme
+          final darkTheme = ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: settings.accentColor,
+              brightness: Brightness.dark,
+              surface: const Color(0xFF1A1A2E),
+            ),
+            scaffoldBackgroundColor: const Color(0xFF1A1A2E),
+          );
+
+          // Custom Hacker theme (Black background, Green text)
+          final hackerTheme = ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.dark,
+            colorScheme: const ColorScheme.dark(
+              primary: Colors.greenAccent,
+              secondary: Colors.green,
+              surface: Colors.black,
+              onSurface: Colors.greenAccent,
+              onPrimary: Colors.black,
+              onSecondary: Colors.black,
+            ),
+            scaffoldBackgroundColor: Colors.black,
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.greenAccent,
+              elevation: 0,
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.greenAccent,
+                foregroundColor: Colors.black,
+              ),
+            ),
+            cardTheme: CardThemeData(
+              color: Colors.grey[900],
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                side: const BorderSide(color: Colors.greenAccent, width: 0.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            listTileTheme: const ListTileThemeData(
+              iconColor: Colors.greenAccent,
+              textColor: Colors.greenAccent,
+            ),
+          );
+
           return MaterialApp(
             title: 'SSH App',
             debugShowCheckedModeBanner: false,
             themeMode: settings.themeMode,
-            theme: ThemeData(
-              primarySwatch: materialColor,
-              brightness: Brightness.light,
-              scaffoldBackgroundColor: Colors.white,
-              appBarTheme: AppBarTheme(
-                backgroundColor: materialColor,
-                elevation: 0,
-              ),
-            ),
-            darkTheme: ThemeData(
-              primarySwatch: materialColor,
-              brightness: Brightness.dark,
-              scaffoldBackgroundColor: const Color(0xFF1A1A2E),
-              appBarTheme: const AppBarTheme(
-                backgroundColor: Color(0xFF16213E),
-                elevation: 0,
-              ),
-            ),
+            theme: lightTheme,
+            darkTheme: settings.appTheme == AppTheme.hacker ? hackerTheme : darkTheme,
             home: const SplashScreen(),
           );
         },
