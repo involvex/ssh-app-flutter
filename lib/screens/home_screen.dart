@@ -287,7 +287,7 @@ class ClientTab extends StatelessWidget {
                         ssh.terminal,
                         padding: const EdgeInsets.all(8),
                         theme: terminalTheme,
-                        textStyle: TerminalStyle(
+                        textStyle: const TerminalStyle(
                           fontSize: 14,
                           fontFamily: 'monospace',
                         ),
