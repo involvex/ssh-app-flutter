@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:xterm/xterm.dart';
 import '../providers/ssh_provider.dart';
 
 class CtrlButtonPanel extends StatelessWidget {
@@ -20,24 +21,46 @@ class CtrlButtonPanel extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: Colors.grey.shade700),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text(
-                'Ctrl',
+              const Text(
+                'Nav',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                   color: Colors.grey,
                 ),
               ),
-              SizedBox(width: 8),
-              _CtrlButton(label: 'C', charCode: 3),
-              _CtrlButton(label: 'D', charCode: 4),
-              _CtrlButton(label: 'Z', charCode: 26),
-              _CtrlButton(label: 'L', charCode: 12),
-              _CtrlButton(label: 'A', charCode: 1),
-              _CtrlButton(label: 'P', charCode: 16),
+              const SizedBox(width: 8),
+              _NavButton(
+                label: 'Tab',
+                onTap: () => ssh.terminal.keyInput(TerminalKey.tab),
+              ),
+              _NavButton(
+                label: '←',
+                onTap: () => ssh.terminal.keyInput(TerminalKey.arrowLeft),
+              ),
+              _NavButton(
+                label: '→',
+                onTap: () => ssh.terminal.keyInput(TerminalKey.arrowRight),
+              ),
+              _NavButton(
+                label: '↑',
+                onTap: () => ssh.terminal.keyInput(TerminalKey.arrowUp),
+              ),
+              _NavButton(
+                label: '↓',
+                onTap: () => ssh.terminal.keyInput(TerminalKey.arrowDown),
+              ),
+              _NavButton(
+                label: 'Home',
+                onTap: () => ssh.terminal.keyInput(TerminalKey.home),
+              ),
+              _NavButton(
+                label: 'End',
+                onTap: () => ssh.terminal.keyInput(TerminalKey.end),
+              ),
             ],
           ),
         );
@@ -46,13 +69,13 @@ class CtrlButtonPanel extends StatelessWidget {
   }
 }
 
-class _CtrlButton extends StatelessWidget {
+class _NavButton extends StatelessWidget {
   final String label;
-  final int charCode;
+  final VoidCallback onTap;
 
-  const _CtrlButton({
+  const _NavButton({
     required this.label,
-    required this.charCode,
+    required this.onTap,
   });
 
   @override
@@ -60,10 +83,7 @@ class _CtrlButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: InkWell(
-        onTap: () {
-          final ssh = Provider.of<SSHProvider>(context, listen: false);
-          ssh.sendControlCharacter(charCode);
-        },
+        onTap: onTap,
         borderRadius: BorderRadius.circular(4),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

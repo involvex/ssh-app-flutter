@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:xterm/xterm.dart';
 import '../models/keyboard_shortcut.dart';
 import '../providers/settings_provider.dart';
 import '../providers/ssh_provider.dart';
@@ -175,22 +176,22 @@ class _ShortcutChip extends StatelessWidget {
         }
         break;
       case ShortcutAction.arrowUp:
-        if (isConnected) ssh.terminal.write('\x1b[A');
+        if (isConnected) ssh.terminal.keyInput(TerminalKey.arrowUp);
         break;
       case ShortcutAction.arrowDown:
-        if (isConnected) ssh.terminal.write('\x1b[B');
+        if (isConnected) ssh.terminal.keyInput(TerminalKey.arrowDown);
         break;
       case ShortcutAction.arrowRight:
-        if (isConnected) ssh.terminal.write('\x1b[C');
+        if (isConnected) ssh.terminal.keyInput(TerminalKey.arrowRight);
         break;
       case ShortcutAction.arrowLeft:
-        if (isConnected) ssh.terminal.write('\x1b[D');
+        if (isConnected) ssh.terminal.keyInput(TerminalKey.arrowLeft);
         break;
       case ShortcutAction.home:
-        if (isConnected) ssh.terminal.write('\x1b[H');
+        if (isConnected) ssh.terminal.keyInput(TerminalKey.home);
         break;
       case ShortcutAction.end:
-        if (isConnected) ssh.terminal.write('\x1b[F');
+        if (isConnected) ssh.terminal.keyInput(TerminalKey.end);
         break;
       }
   }

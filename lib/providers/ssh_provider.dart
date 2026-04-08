@@ -204,6 +204,12 @@ class SSHProvider extends ChangeNotifier {
     }
   }
 
+  void sendString(String data) {
+    if (_session != null && isClientConnected) {
+      _session!.stdin.add(utf8.encode(data));
+    }
+  }
+
   String _getCtrlLabel(int charCode) {
     switch (charCode) {
       case 3:
