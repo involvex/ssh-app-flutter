@@ -4,16 +4,31 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- Terminal screen body -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M30,30h48v48h-48z"/>
+        android:fillColor="#0A0E1A"
+        android:pathData="M20,20 L88,20 L88,88 L20,88 Z"/>
+    <!-- Title bar -->
     <path
-        android:fillColor="#16213E"
-        android:pathData="M34,38l40,0l0,32l-40,0z"/>
+        android:fillColor="#1A2D50"
+        android:pathData="M20,20 L88,20 L88,34 L20,34 Z"/>
+    <!-- Window control dots: close, minimize, maximize -->
+    <path android:fillColor="#FF5F57" android:pathData="M27,24 L31,24 L31,30 L27,30 Z"/>
+    <path android:fillColor="#FEBC2E" android:pathData="M35,24 L39,24 L39,30 L35,30 Z"/>
+    <path android:fillColor="#28C840" android:pathData="M43,24 L47,24 L47,30 L43,30 Z"/>
+    <!-- Faint terminal-output lines -->
+    <path
+        android:fillColor="#1E3A6A"
+        android:pathData="M24,39 L82,39 L82,43 L24,43 Z"/>
+    <path
+        android:fillColor="#1E3A6A"
+        android:pathData="M24,47 L66,47 L66,51 L24,51 Z"/>
+    <!-- ">" prompt: right-pointing filled triangle -->
     <path
         android:fillColor="#4CAF50"
-        android:pathData="M38,44l8,0l0,2l-8,0zM38,50l12,0l0,2l-12,0zM38,56l10,0l0,2l-10,0zM38,62l6,0l0,2l-6,0z"/>
+        android:pathData="M23,56 L23,74 L40,65 Z"/>
+    <!-- "_" cursor rectangle -->
     <path
-        android:fillColor="#16213E"
-        android:pathData="M54,44l14,0l0,2l-14,0zM54,50l10,0l0,2l-10,0zM54,56l16,0l0,2l-16,0z"/>
+        android:fillColor="#4CAF50"
+        android:pathData="M44,68 L76,68 L76,74 L44,74 Z"/>
 </vector>
