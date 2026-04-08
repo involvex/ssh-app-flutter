@@ -11,11 +11,14 @@ import 'network_discovery.dart';
 import 'key_manager.dart';
 
 class KeyboardShortcutBar extends StatelessWidget {
-  const KeyboardShortcutBar({super.key});
+  final int? showRow;
+  final bool forceShowOnMobile;
+
+  const KeyboardShortcutBar({super.key, this.showRow, this.forceShowOnMobile = false});
 
   @override
   Widget build(BuildContext context) {
-    if (Platform.isAndroid || Platform.isIOS) {
+    if (!forceShowOnMobile && (Platform.isAndroid || Platform.isIOS)) {
       return const SizedBox.shrink();
     }
 
@@ -26,6 +29,16 @@ class KeyboardShortcutBar extends StatelessWidget {
         }
 
         final maxRow = settings.maxRow;
+
+        if (showRow != null) {
+          final rowIndex = showRow! <= maxRow ? showRow! : maxRow;
+          final shortcuts = settings.getShortcutsByRow(rowIndex);
+          return _ShortcutRow(
+            shortcuts: shortcuts,
+            isConnected: ssh.isClientConnected,
+          );
+        }
+
         return Column(
           children: List.generate(maxRow + 1, (rowIndex) {
             final shortcuts = settings.getShortcutsByRow(rowIndex);

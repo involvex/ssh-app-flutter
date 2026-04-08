@@ -129,7 +129,7 @@ class SSHProvider extends ChangeNotifier {
         // avoids "press Enter" issues. Use the full git.exe path as a
         // fallback when PATH is unreliable on remote SSH sessions.
         final escaped = startupCommand.replaceAll("'", "''");
-        final gitFullPath = r'C:\\Program Files\\Git\\cmd\\git.exe';
+        const gitFullPath = r'C:\Program Files\Git\cmd\git.exe';
 
         // Detect simple git commands and wrap them in a PowerShell -NoProfile
         // invocation using the full git path. Otherwise fall back to the
@@ -138,7 +138,7 @@ class SSHProvider extends ChangeNotifier {
         final isGit = trimmed.toLowerCase().startsWith('git ');
 
         if (isGit) {
-          final psCmd = 'powershell -NoProfile -Command "& \"${gitFullPath}\" ${escaped}"';
+          final psCmd = "powershell -NoProfile -Command \"& '$gitFullPath' $escaped\"";
           try {
             _session!.stdin.add(utf8.encode('$psCmd\r'));
             addLog('Executed startup command via PowerShell wrapper: $psCmd');

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/theme_picker.dart';
 import '../widgets/shortcut_editor.dart';
+import '../widgets/keyboard_shortcut_bar.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -17,32 +18,32 @@ class SettingsScreen extends StatelessWidget {
         builder: (context, settings, child) {
           return ListView(
             padding: const EdgeInsets.all(16),
-            children: [
-              const Text('Appearance', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              const ThemePicker(),
-              const Divider(height: 32),
-              const Text('Keyboard Shortcuts', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
+            children: const [
+              Text('Appearance', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), // prefer_const_literals_to_create_immutables fix
+              SizedBox(height: 16),
+              ThemePicker(),
+              Divider(height: 32),
+              Text('Keyboard Shortcuts', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              SizedBox(height: 16),
               Card(
-                child: ListTile(
-                  leading: const Icon(Icons.keyboard),
-                  title: const Text('Configure Shortcuts'),
-                  subtitle: const Text('Customize keyboard shortcuts'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    showModalBottomSheet<void>(
-                      context: context,
-                      isScrollControlled: true,
-                      builder: (context) => const ShortcutEditor(),
-                    );
-                  },
+                child: ExpansionTile(
+                  leading: Icon(Icons.keyboard),
+                  title: Text('Configure Shortcuts'),
+                  subtitle: Text('Customize keyboard shortcuts'), // prefer_const_constructors fixes
+                  childrenPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  children: [
+                    // Collapsed summary uses the first terminal row (row 1)
+                    KeyboardShortcutBar(showRow: 1, forceShowOnMobile: true), // shows first terminal row (Tab, arrows, Home/End)
+                    SizedBox(height: 8),
+                    // Expanded editor embedded inline
+                    ShortcutEditor(),
+                  ],
                 ),
               ),
-              const Divider(height: 32),
-              const Text('About', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              const Card(
+              Divider(height: 32),
+              Text('About', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              SizedBox(height: 16),
+              Card(
                 child: Column(
                   children: [
                     ListTile(

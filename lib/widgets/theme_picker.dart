@@ -41,7 +41,7 @@ class ThemePicker extends StatelessWidget {
                     label: Text('Hacker'),
                     icon: Icon(Icons.terminal),
                   ),
-                ],
+                ], // prefer_const_literals_to_create_immutables fix
                 selected: {settings.appTheme},
                 onSelectionChanged: (Set<AppTheme> newSelection) {
                   settings.setAppTheme(newSelection.first);

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'services/config_service.dart';
 import 'providers/ssh_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/snippet_provider.dart';
 import 'screens/splash_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await ConfigService.init();
   runApp(const MyApp());
 }
 

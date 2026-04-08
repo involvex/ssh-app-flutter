@@ -23,34 +23,37 @@ class SnippetButtonPanel extends StatelessWidget {
             color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.code, size: 18, color: Colors.grey),
-              const SizedBox(width: 8),
-              ...displaySnippets.map((s) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: ActionChip(
-                  label: Text(
-                    s.name,
-                    style: const TextStyle(fontSize: 12),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.code, size: 18, color: Colors.grey),
+                const SizedBox(width: 8),
+                ...displaySnippets.map((s) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: ActionChip(
+                    label: Text(
+                      s.name,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    padding: EdgeInsets.zero,
+                    onPressed: () => ssh.terminal.write('${s.content}\n'),
+                    backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                    labelStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.onSecondaryContainer,
+                    ),
                   ),
+                )),
+                IconButton(
+                  icon: const Icon(Icons.more_horiz, size: 20),
+                  onPressed: () => _showSnippetSelection(context),
+                  tooltip: 'More Snippets',
                   padding: EdgeInsets.zero,
-                  onPressed: () => ssh.terminal.write('${s.content}\n'),
-                  backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-                  labelStyle: TextStyle(
-                    color: Theme.of(context).colorScheme.onSecondaryContainer,
-                  ),
+                  constraints: const BoxConstraints(),
                 ),
-              )),
-              IconButton(
-                icon: const Icon(Icons.more_horiz, size: 20),
-                onPressed: () => _showSnippetSelection(context),
-                tooltip: 'More Snippets',
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
