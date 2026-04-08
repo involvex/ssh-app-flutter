@@ -124,18 +124,33 @@ class SSHProvider extends ChangeNotifier {
       addLog('Connected successfully');
 
       if (startupCommand != null && startupCommand.isNotEmpty) {
-        // Wait for the shell to emit some stdout (shell prompt) before sending
-        // the startup command so it is accepted immediately without needing
-        // an extra Enter from the user. If no output appears within timeout,
-        // still send the command.
-        try {
-          await _session!.stdout.first.timeout(const Duration(seconds: 3));
-        } catch (_) {
-          // ignore timeout
+        // Prefer running the command as a single non-interactive PowerShell
+        // invocation so it doesn't rely on profile/login shell behavior and
+        // avoids "press Enter" issues. Use the full git.exe path as a
+        // fallback when PATH is unreliable on remote SSH sessions.
+        final escaped = startupCommand.replaceAll("'", "''");
+        final gitFullPath = r'C:\\Program Files\\Git\\cmd\\git.exe';
+
+        // Detect simple git commands and wrap them in a PowerShell -NoProfile
+        // invocation using the full git path. Otherwise fall back to the
+        // existing behaviour of writing into the shell.
+        final trimmed = startupCommand.trim();
+        final isGit = trimmed.toLowerCase().startsWith('git ');
+
+        if (isGit) {
+          final psCmd = 'powershell -NoProfile -Command "& \"${gitFullPath}\" ${escaped}"';
+          try {
+            _session!.stdin.add(utf8.encode('$psCmd\r'));
+            addLog('Executed startup command via PowerShell wrapper: $psCmd');
+          } catch (e) {
+            _session!.stdin.add(utf8.encode('$startupCommand\r'));
+            addLog('Fallback: Executed startup command raw: $startupCommand');
+          }
+        } else {
+          // non-git commands: send to shell (retain previous behaviour)
+          _session!.stdin.add(utf8.encode('$startupCommand\r'));
+          addLog('Executed startup command: $startupCommand');
         }
-        // Send CR to ensure the command is executed as expected by many shells
-        _session!.stdin.add(utf8.encode('$startupCommand\r'));
-        addLog('Executed startup command: $startupCommand');
       }
 
       notifyListeners();
