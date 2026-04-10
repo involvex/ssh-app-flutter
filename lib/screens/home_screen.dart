@@ -256,30 +256,15 @@ class ClientTab extends StatelessWidget {
                       selected: isActive,
                       label: Text('${s.name} (${s.profile.host}:${s.profile.port})'),
                       onSelected: (_) => ssh.switchActiveSession(s.id),
-                      onPressed: () async {
-                        final shouldClose = await showDialog<bool>(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: const Text('Close Tab?'),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('No')),
-                              TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Yes')),
-                            ],
-                          ),
-                        );
-                        if (shouldClose == true) {
-                          ssh.removeSession(s.id);
-                        }
-                      },
                     ),
                   );
                 }).toList()
                   ..add(
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                      child: ActionChip(
-                        label: const Icon(Icons.add),
-                        onPressed: () => showDialog<void>(context: context, builder: (c) => const ConnectionModal()),
+                      child: GestureDetector(
+                        onTap: () => showDialog<void>(context: context, builder: (c) => const ConnectionModal()),
+                        child: const Chip(label: Icon(Icons.add)),
                       ),
                     ),
                   ),
