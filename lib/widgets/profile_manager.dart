@@ -216,23 +216,10 @@ class ProfileManager extends StatelessWidget {
   void _useProfile(BuildContext context, SSHProfile profile) async {
     final ssh = Provider.of<SSHProvider>(context, listen: false);
     Navigator.pop(context);
-    
+
     try {
-      if (profile.isServer) {
-        await ssh.startServer(
-          port: profile.port,
-          username: profile.username,
-          password: profile.password ?? '',
-        );
-      } else {
-        await ssh.connectClient(
-          host: profile.host,
-          port: profile.port,
-          username: profile.username,
-          password: profile.password ?? '',
-          startupCommand: profile.startupCommand,
-        );
-      }
+      final entry = ssh.createSessionFromProfile(profile, name: profile.name);
+      await ssh.connectSession(entry.id);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
