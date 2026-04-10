@@ -55,13 +55,14 @@ class _SftpBrowserState extends State<SftpBrowser> {
   }
 
   Future<void> _download(String remoteFile) async {
-    final picked = await FilePicker.platform.getDirectoryPath();
-    if (picked == null) return;
-
+    // capture context-dependent values before any awaits to avoid use_build_context_synchronously
     final provider = Provider.of<SSHProvider>(context, listen: false);
     final active = provider.sessions.firstWhere((s) => s.id == widget.sessionId);
     final client = active.client!;
     final helper = SftpHelper(client);
+
+    final picked = await FilePicker.platform.getDirectoryPath();
+    if (picked == null) return;
 
     final local = File('$picked/$remoteFile');
     final remote = (currentPath == '.' || currentPath == '/') ? remoteFile : '$currentPath/$remoteFile';
