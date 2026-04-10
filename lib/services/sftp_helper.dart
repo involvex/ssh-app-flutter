@@ -12,7 +12,7 @@ class SftpHelper {
     final names = await sftp.listdir(path);
     final List<Map<String,dynamic>> out = [];
     for (final n in names) {
-      final filename = n.filename?.toString() ?? n.toString();
+      final filename = n.filename.toString();
       final remotePath = (path == '.' || path == '/') ? filename : '$path/$filename';
       bool isDir = false;
       try {
