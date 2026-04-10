@@ -118,7 +118,7 @@ class SSHProvider extends ChangeNotifier {
       final client = SSHClient(
         socket,
         username: profile.username,
-        onPasswordRequest: () => profile.password,
+        onPasswordRequest: () => profile.password ?? '',
       );
 
       final shell = await client.shell(
@@ -149,11 +149,29 @@ class SSHProvider extends ChangeNotifier {
       notifyListeners();
 
       if (profile.startupCommand?.isNotEmpty ?? false) {
-        shell.stdin.add(utf8.encode('${profile.startupCommand}\r'));
-        addLog('Executed startup command for ${entry.name}');
+        final startupCommand = profile.startupCommand!;
+        final trimmed = startupCommand.trim();
+        final isGit = trimmed.toLowerCase().startsWith('git ');
+        if (isGit) {
+          final escaped = startupCommand.replaceAll("'", "''");
+          const gitFullPath = r'C:\Program Files\Git\cmd\git.exe';
+          final psCmd = "powershell -NoProfile -Command \"& '$gitFullPath' $escaped\"";
+          try {
+            shell.stdin.add(utf8.encode('$psCmd\r'));
+            addLog('Executed startup command via PowerShell wrapper: $psCmd');
+          } catch (_) {
+            shell.stdin.add(utf8.encode('$startupCommand\r'));
+            addLog('Fallback: Executed startup command raw: $startupCommand');
+          }
+        } else {
+          shell.stdin.add(utf8.encode('$startupCommand\r'));
+          addLog('Executed startup command: $startupCommand');
+        }
       }
     } catch (e) {
       addLog('Connection failed for ${profile.host}:${profile.port} — $e');
+      sessions.removeWhere((s) => s.id == sessionId);
+      notifyListeners();
       rethrow;
     }
   }
@@ -167,7 +185,7 @@ class SSHProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> removeSession(String sessionId) async {
+  void removeSession(String sessionId) {
     final idx = sessions.indexWhere((s) => s.id == sessionId);
     if (idx == -1) return;
     final entry = sessions.removeAt(idx);
@@ -176,15 +194,6 @@ class SSHProvider extends ChangeNotifier {
       activeSessionId = sessions.isNotEmpty ? sessions.first.id : null;
     }
     notifyListeners();
-  }
-
-  Future<List<dynamic>> sftpList(String sessionId, String path) async {
-    final entry = sessions.firstWhere((s) => s.id == sessionId);
-    final client = entry.client;
-    if (client == null) throw StateError('Session not connected');
-    final sftp = await client.sftp();
-    final list = await sftp.listdir(path);
-    return list;
   }
 
   Future<void> connectClient({
@@ -232,7 +241,7 @@ class SSHProvider extends ChangeNotifier {
     final entry = activeSession;
     if (entry != null && entry.shellSession != null && entry.isConnected) {
       entry.shellSession!.stdin.add(Uint8List.fromList([charCode]));
-      addLog('Sent Ctrl+$_getCtrlLabel(charCode)');
+      addLog('Sent Ctrl+${_getCtrlLabel(charCode)}');
     }
   }
 

@@ -41,7 +41,9 @@ class SnippetButtonPanel extends StatelessWidget {
                     padding: EdgeInsets.zero,
                     onPressed: () {
                           final active = ssh.activeSession;
-                          if (active != null && active.isConnected) active.terminal.write('${s.content}\n');
+                          if (active != null && active.isConnected) {
+                          active.terminal.write('${s.content}\n');
+                        }
                         },
                         backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
                     labelStyle: TextStyle(
@@ -148,7 +150,10 @@ class _SnippetSelectionSheet extends StatelessWidget {
                           style: theme.textTheme.bodySmall,
                         ),
                         onTap: () {
-                          final active = ssh.activeSession; if (active != null && active.isConnected) active.terminal.write('${snippet.content}\n');
+                          final active = ssh.activeSession;
+                          if (active != null && active.isConnected) {
+                            active.terminal.write('${snippet.content}\n');
+                          }
                           Navigator.pop(context);
                         },
                       );

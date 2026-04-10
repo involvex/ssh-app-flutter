@@ -201,10 +201,20 @@ class _ShortcutChip extends StatelessWidget {
             }
         break;
       case ShortcutAction.home:
-        if (isConnected) { final active = ssh.activeSession; if (active != null) active.terminal.keyInput(TerminalKey.home); }
+        if (isConnected) {
+          final active = ssh.activeSession;
+          if (active != null) {
+            active.terminal.keyInput(TerminalKey.home);
+          }
+        }
         break;
       case ShortcutAction.end:
-        if (isConnected) { final active = ssh.activeSession; if (active != null) active.terminal.keyInput(TerminalKey.end); }
+        if (isConnected) {
+          final active = ssh.activeSession;
+          if (active != null) {
+            active.terminal.keyInput(TerminalKey.end);
+          }
+        }
         break;
       }
   }

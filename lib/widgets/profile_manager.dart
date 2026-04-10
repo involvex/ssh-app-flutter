@@ -218,8 +218,16 @@ class ProfileManager extends StatelessWidget {
     Navigator.pop(context);
 
     try {
-      final entry = ssh.createSessionFromProfile(profile, name: profile.name);
-      await ssh.connectSession(entry.id);
+      if (profile.isServer) {
+        await ssh.startServer(
+          port: profile.port,
+          username: profile.username,
+          password: profile.password ?? '',
+        );
+      } else {
+        final entry = ssh.createSessionFromProfile(profile, name: profile.name);
+        await ssh.connectSession(entry.id);
+      }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

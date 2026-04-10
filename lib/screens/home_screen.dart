@@ -239,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
 class ClientTab extends StatelessWidget {
   const ClientTab({super.key});
 
-  Widget _buildSessionTabBar(BuildContext context, SSHProvider ssh) {
+  Widget _buildSessionTabBar(BuildContext context) {
     return Consumer<SSHProvider>(builder: (context, ssh, child) {
       final sessions = ssh.sessions;
       final chips = sessions.map((s) {
@@ -324,12 +324,12 @@ class ClientTab extends StatelessWidget {
 
         return Column(
           children: <Widget>[
-            _buildSessionTabBar(context, Provider.of<SSHProvider>(context, listen: false)),
+    _buildSessionTabBar(context),
             Expanded(
               child: Consumer<SSHProvider>(builder: (context, ssh, child) {
                 final active = ssh.activeSession;
                 if (active == null) return const Center(child: Text('No session. Click + to connect'));
-                if (!active.isConnected) return const Center(child: Text('Connecting...'));
+                if (!active.isConnected) return const Center(child: Text('Not connected'));
                 return Container(
                   color: terminalTheme.background,
                   child: TerminalView(
@@ -361,10 +361,10 @@ class ClientTab extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: OutlinedButton.icon(
-                  onPressed: () {
+                  onPressed: () async {
                     final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
                     if (active != null) {
-                      Provider.of<SSHProvider>(context, listen: false).disconnectSession(active.id);
+                      await Provider.of<SSHProvider>(context, listen: false).disconnectSession(active.id);
                     }
                   },
                   icon: const Icon(Icons.close),

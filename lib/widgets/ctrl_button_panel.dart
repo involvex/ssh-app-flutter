@@ -38,49 +38,63 @@ class CtrlButtonPanel extends StatelessWidget {
                 label: 'Tab',
                 onTap: () {
                   final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
-                  if (active != null) active.terminal.keyInput(TerminalKey.tab);
+                  if (active != null) {
+                    active.terminal.keyInput(TerminalKey.tab);
+                  }
                 },
               ),
               _NavButton(
                 label: '←',
                 onTap: () {
                   final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
-                  if (active != null) active.terminal.keyInput(TerminalKey.arrowLeft);
+                  if (active != null) {
+                    active.terminal.keyInput(TerminalKey.arrowLeft);
+                  }
                 },
               ),
               _NavButton(
                 label: '→',
                 onTap: () {
                   final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
-                  if (active != null) active.terminal.keyInput(TerminalKey.arrowRight);
+                  if (active != null) {
+                    active.terminal.keyInput(TerminalKey.arrowRight);
+                  }
                 },
               ),
               _NavButton(
                 label: '↑',
                 onTap: () {
                   final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
-                  if (active != null) active.terminal.keyInput(TerminalKey.arrowUp);
+                  if (active != null) {
+                    active.terminal.keyInput(TerminalKey.arrowUp);
+                  }
                 },
               ),
               _NavButton(
                 label: '↓',
                 onTap: () {
                   final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
-                  if (active != null) active.terminal.keyInput(TerminalKey.arrowDown);
+                  if (active != null) {
+                    active.terminal.keyInput(TerminalKey.arrowDown);
+                  }
                 },
               ),
               _NavButton(
                 label: 'Home',
                 onTap: () {
                   final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
-                  if (active != null) active.terminal.keyInput(TerminalKey.home);
+                  if (active != null) {
+                    active.terminal.keyInput(TerminalKey.home);
+                  }
                 },
               ),
               _NavButton(
                 label: 'End',
                 onTap: () {
                   final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
-                  if (active != null) active.terminal.keyInput(TerminalKey.end);
+                  if (active != null) {
+                    active.terminal.keyInput(TerminalKey.end);
+                  }
                 },
               ),
             ],

@@ -10,20 +10,10 @@ class SftpHelper {
   Future<List<Map<String,dynamic>>> listDirWithType(String path) async {
     final sftp = await client.sftp();
     final names = await sftp.listdir(path);
-    final List<Map<String,dynamic>> out = [];
-    for (final n in names) {
-      final filename = n.filename.toString();
-      final remotePath = (path == '.' || path == '/') ? filename : '$path/$filename';
-      bool isDir = false;
-      try {
-        final attrs = await sftp.stat(remotePath);
-        isDir = attrs.isDirectory;
-      } catch (_) {
-        isDir = false;
-      }
-      out.add({'name': filename, 'isDirectory': isDir});
-    }
-    return out;
+    return names.map((n) => <String, dynamic>{
+      'name': n.filename.toString(),
+      'isDirectory': n.attr.isDirectory,
+    }).toList();
   }
 
   Future<void> downloadStream(String remotePath, File localFile) async {
@@ -44,9 +34,16 @@ class SftpHelper {
 
   Future<void> upload(File localFile, String remotePath) async {
     final sftp = await client.sftp();
-    final data = await localFile.readAsBytes();
     final file = await sftp.open(remotePath, mode: SftpFileOpenMode.write | SftpFileOpenMode.create | SftpFileOpenMode.truncate);
-    await file.writeBytes(Uint8List.fromList(data));
-    await file.close();
+    try {
+      var offset = 0;
+      await for (final chunk in localFile.openRead()) {
+        final bytes = Uint8List.fromList(chunk);
+        await file.writeBytes(bytes, offset: offset);
+        offset += bytes.length;
+      }
+    } finally {
+      await file.close();
+    }
   }
 }

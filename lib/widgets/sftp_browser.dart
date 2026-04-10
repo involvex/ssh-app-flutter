@@ -1,11 +1,13 @@
 // lib/widgets/sftp_browser.dart
+import 'dart:async';
 import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../providers/ssh_provider.dart';
 import '../services/sftp_helper.dart';
-import 'package:dartssh2/dartssh2.dart';
-import 'package:file_picker/file_picker.dart';
 
 class SftpBrowser extends StatefulWidget {
   final String sessionId;
@@ -23,36 +25,30 @@ class _SftpBrowserState extends State<SftpBrowser> {
   @override
   void initState() {
     super.initState();
-    _refresh();
+    unawaited(_refresh());
   }
 
-  Future<void> _refresh({SSHClient? clientProvided}) async {
+  Future<void> _refresh() async {
     setState(() => loading = true);
 
-    SSHClient client;
-    var sftpClient = clientProvided;
-    if (sftpClient == null) {
-      final provider = Provider.of<SSHProvider>(context, listen: false);
-      final active = provider.sessions.firstWhere((s) => s.id == widget.sessionId);
-      client = active.client!;
-      sftpClient = client;
+    final provider = Provider.of<SSHProvider>(context, listen: false);
+    final matches = provider.sessions.where((s) => s.id == widget.sessionId);
+    if (matches.isEmpty) {
+      setState(() => loading = false);
+      return;
+    }
+    final active = matches.first;
+    final client = active.client;
+    if (client == null) {
+      setState(() => loading = false);
+      return;
     }
 
-    final sftp = await sftpClient.sftp();
-    final names = await sftp.listdir(currentPath);
+    final helper = SftpHelper(client);
+    final out = await helper.listDirWithType(currentPath);
 
-    final List<Map<String, dynamic>> out = [];
-    for (final n in names) {
-      final filename = n.filename.toString();
-      final remotePath = (currentPath == '.' || currentPath == '/') ? filename : '$currentPath/$filename';
-      bool isDir = false;
-      try {
-        final attrs = await sftp.stat(remotePath);
-        isDir = attrs.isDirectory;
-      } catch (_) {
-        isDir = false;
-      }
-      out.add({'name': filename, 'isDirectory': isDir});
+    if (currentPath != '.' && currentPath != '/') {
+      out.insert(0, <String, dynamic>{'name': '..', 'isDirectory': true});
     }
 
     if (!mounted) return;
@@ -81,19 +77,17 @@ class _SftpBrowserState extends State<SftpBrowser> {
   }
 
   Future<void> _upload() async {
+    // Capture all context-dependent values before the first await
+    final provider = Provider.of<SSHProvider>(context, listen: false);
+    final active = provider.sessions.firstWhere((s) => s.id == widget.sessionId);
+    final helper = SftpHelper(active.client!);
+    final messenger = ScaffoldMessenger.of(context);
+
     final result = await FilePicker.platform.pickFiles();
     if (result == null) return;
     final path = result.files.single.path!;
     final file = File(path);
-    // Capture provider/client before any awaits
-    // ignore: use_build_context_synchronously
-    final provider = Provider.of<SSHProvider>(context, listen: false);
-    final active = provider.sessions.firstWhere((s) => s.id == widget.sessionId);
-    final helper = SftpHelper(active.client!);
     final remotePath = (currentPath == '.' || currentPath == '/') ? result.files.single.name : '$currentPath/${result.files.single.name}';
-    // capture messenger before async work to avoid using BuildContext after await
-    // ignore: use_build_context_synchronously
-    final messenger = ScaffoldMessenger.of(context);
     await helper.upload(file, remotePath);
     if (!mounted) return;
     await _refresh();
@@ -128,13 +122,19 @@ class _SftpBrowserState extends State<SftpBrowser> {
                         leading: Icon(isDir ? Icons.folder : Icons.insert_drive_file),
                         title: Text(name),
                         onTap: () async {
+                          if (name == '..') {
+                            final lastSlash = currentPath.lastIndexOf('/');
+                            if (lastSlash <= 0) {
+                              setState(() => currentPath = lastSlash == 0 ? '/' : '.');
+                            } else {
+                              setState(() => currentPath = currentPath.substring(0, lastSlash));
+                            }
+                            await _refresh();
+                            return;
+                          }
                           if (isDir) {
                             setState(() => currentPath = (currentPath == '.' ? name : '$currentPath/$name'));
-                            // Capture client up-front to avoid accessing BuildContext after async gap
-                            final provider = Provider.of<SSHProvider>(context, listen: false);
-                            final active = provider.sessions.firstWhere((s) => s.id == widget.sessionId);
-                            final client = active.client!;
-                            await _refresh(clientProvided: client);
+                            await _refresh();
                           }
                         },
                         trailing: isDir ? null : IconButton(icon: const Icon(Icons.download), onPressed: () => _download(name)),
