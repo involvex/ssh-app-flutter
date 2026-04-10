@@ -34,9 +34,10 @@ class KeyboardShortcutBar extends StatelessWidget {
         if (showRow != null) {
           final rowIndex = showRow! <= maxRow ? showRow! : maxRow;
           final shortcuts = settings.getShortcutsByRow(rowIndex);
+          final active = ssh.activeSession;
           return _ShortcutRow(
             shortcuts: shortcuts,
-            isConnected: ssh.isClientConnected,
+            isConnected: active != null && active.isConnected,
           );
         }
 
@@ -176,16 +177,28 @@ class _ShortcutChip extends StatelessWidget {
         }
         break;
       case ShortcutAction.arrowUp:
-        if (isConnected) ssh.terminal.keyInput(TerminalKey.arrowUp);
+        if (isConnected) {
+              final active = ssh.activeSession;
+              if (active != null) active.terminal.keyInput(TerminalKey.arrowUp);
+            }
         break;
       case ShortcutAction.arrowDown:
-        if (isConnected) ssh.terminal.keyInput(TerminalKey.arrowDown);
+        if (isConnected) {
+              final active = ssh.activeSession;
+              if (active != null) active.terminal.keyInput(TerminalKey.arrowDown);
+            }
         break;
       case ShortcutAction.arrowRight:
-        if (isConnected) ssh.terminal.keyInput(TerminalKey.arrowRight);
+        if (isConnected) {
+              final active = ssh.activeSession;
+              if (active != null) active.terminal.keyInput(TerminalKey.arrowRight);
+            }
         break;
       case ShortcutAction.arrowLeft:
-        if (isConnected) ssh.terminal.keyInput(TerminalKey.arrowLeft);
+        if (isConnected) {
+              final active = ssh.activeSession;
+              if (active != null) active.terminal.keyInput(TerminalKey.arrowLeft);
+            }
         break;
       case ShortcutAction.home:
         if (isConnected) ssh.terminal.keyInput(TerminalKey.home);

@@ -11,7 +11,8 @@ class SnippetButtonPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer2<SSHProvider, SnippetProvider>(
       builder: (context, ssh, snippets, child) {
-        if (!ssh.isClientConnected || !snippets.isLoaded) {
+        final active = ssh.activeSession;
+        if (active == null || !active.isConnected || !snippets.isLoaded) {
           return const SizedBox.shrink();
         }
 

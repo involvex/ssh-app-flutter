@@ -10,7 +10,8 @@ class CtrlButtonPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<SSHProvider>(
       builder: (context, ssh, child) {
-        if (!ssh.isClientConnected) {
+        final active = ssh.activeSession;
+        if (active == null || !active.isConnected) {
           return const SizedBox.shrink();
         }
 

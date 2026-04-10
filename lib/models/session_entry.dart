@@ -16,9 +16,9 @@ class SessionEntry {
   bool isConnected;
 
   SessionEntry({
-    String? id,
     required this.name,
     required this.profile,
+    String? id,
     Terminal? terminal,
   })  : id = id ?? const Uuid().v4(),
         terminal = terminal ?? Terminal(),
@@ -27,6 +27,5 @@ class SessionEntry {
   void disposeRuntime() {
     shellSession?.close();
     client?.close();
-    terminal.dispose();
   }
 }
