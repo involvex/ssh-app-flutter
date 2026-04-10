@@ -24,14 +24,16 @@ class BackupService {
     final file = File('${dir.path}/ssh_app_backup.json');
     await file.writeAsString(jsonString);
 
-    await Share.shareXFiles(
-      [XFile(file.path)],
-      subject: 'SSH App Backup',
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(file.path)],
+        subject: 'SSH App Backup',
+      ),
     );
   }
 
   static Future<String> import() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['json'],
     );

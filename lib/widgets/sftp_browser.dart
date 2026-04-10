@@ -65,7 +65,7 @@ class _SftpBrowserState extends State<SftpBrowser> {
     final client = active.client!;
     final helper = SftpHelper(client);
 
-    final picked = await FilePicker.platform.getDirectoryPath();
+    final picked = await FilePicker.getDirectoryPath();
     if (picked == null) return;
 
     final local = File('$picked/$remoteFile');
@@ -83,7 +83,7 @@ class _SftpBrowserState extends State<SftpBrowser> {
     final helper = SftpHelper(active.client!);
     final messenger = ScaffoldMessenger.of(context);
 
-    final result = await FilePicker.platform.pickFiles();
+    final result = await FilePicker.pickFiles();
     if (result == null) return;
     final path = result.files.single.path!;
     final file = File(path);
