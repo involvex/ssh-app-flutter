@@ -89,11 +89,12 @@ class _SftpBrowserState extends State<SftpBrowser> {
     final active = provider.sessions.firstWhere((s) => s.id == widget.sessionId);
     final helper = SftpHelper(active.client!);
     final remotePath = (currentPath == '.' || currentPath == '/') ? result.files.single.name : '$currentPath/${result.files.single.name}';
+    final messenger = ScaffoldMessenger.of(context);
     await helper.upload(file, remotePath);
     if (!mounted) return;
     await _refresh();
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Uploaded')));
+    messenger.showSnackBar(const SnackBar(content: Text('Uploaded')));
   }
 
   @override
