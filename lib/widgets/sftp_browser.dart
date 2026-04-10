@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/ssh_provider.dart';
 import '../services/sftp_helper.dart';
+import 'package:dartssh2/dartssh2.dart';
 import 'package:file_picker/file_picker.dart';
 
 class SftpBrowser extends StatefulWidget {
