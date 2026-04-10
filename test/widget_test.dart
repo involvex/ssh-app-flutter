@@ -15,9 +15,9 @@ import 'package:ssh_app/services/config_service.dart';
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build a minimal app with the same top-level title to avoid running the full startup sequence.
-    await tester.pumpWidget(const MaterialApp(
+    await tester.pumpWidget(MaterialApp(
       home: Scaffold(
-        appBar: AppBar(title: Text('SSH App')),
+        appBar: AppBar(title: const Text('SSH App')),
       ),
     ));
 
