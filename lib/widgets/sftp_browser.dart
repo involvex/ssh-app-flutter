@@ -133,7 +133,7 @@ class _SftpBrowserState extends State<SftpBrowser> {
                             return;
                           }
                           if (isDir) {
-                            setState(() => currentPath = (currentPath == '.' ? name : '$currentPath/$name'));
+                            setState(() => currentPath = (currentPath == '.' || currentPath == '/') ? name : '$currentPath/$name');
                             await _refresh();
                           }
                         },
