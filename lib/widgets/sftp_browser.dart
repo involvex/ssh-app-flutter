@@ -35,7 +35,7 @@ class _SftpBrowserState extends State<SftpBrowser> {
 
     final List<Map<String, dynamic>> out = [];
     for (final n in names) {
-      final filename = (n.filename ?? n.name ?? n.toString()).toString();
+      final filename = (n.filename ?? n.toString()).toString();
       final remotePath = (currentPath == '.' || currentPath == '/') ? filename : '$currentPath/$filename';
       bool isDir = false;
       try {
