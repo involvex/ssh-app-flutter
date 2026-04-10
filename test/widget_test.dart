@@ -12,6 +12,10 @@ import 'package:ssh_app/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+    // Initialize ConfigService with in-memory SharedPreferences for tests.
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    await ConfigService.init();
+
     // Build our app and trigger a frame.
     await tester.pumpWidget(const MyApp());
 

@@ -19,7 +19,6 @@ class SftpHelper {
     // Stream the remote file in chunks and write to the local file to avoid OOM on large files.
     final sink = localFile.openWrite();
     try {
-      const int chunkSize = 32 * 1024; // 32 KB
       // The SftpFile exposes a Stream<Uint8List> via read(), so iterate over it
       final stream = file.read();
       await for (final chunk in stream) {
