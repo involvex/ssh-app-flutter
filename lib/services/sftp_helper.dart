@@ -7,26 +7,37 @@ class SftpHelper {
   final SSHClient client;
   SftpHelper(this.client);
 
-  Future<List<dynamic>> listDir(String path) async {
+  Future<List<Map<String,dynamic>>> listDirWithType(String path) async {
     final sftp = await client.sftp();
     final names = await sftp.listdir(path);
-    return names;
+    final List<Map<String,dynamic>> out = [];
+    for (final n in names) {
+      final filename = (n.filename ?? n.name ?? n.toString()).toString();
+      final remotePath = (path == '.' || path == '/') ? filename : '$path/$filename';
+      bool isDir = false;
+      try {
+        final attrs = await sftp.stat(remotePath);
+        isDir = attrs.isDirectory;
+      } catch (_) {
+        isDir = false;
+      }
+      out.add({'name': filename, 'isDirectory': isDir});
+    }
+    return out;
   }
 
-  Future<void> download(String remotePath, File localFile) async {
+  Future<void> downloadStream(String remotePath, File localFile) async {
     final sftp = await client.sftp();
-    final file = await sftp.open(remotePath, mode: SftpFileOpenMode.read);
-    // Stream the remote file in chunks and write to the local file to avoid OOM on large files.
+    final remoteFile = await sftp.open(remotePath, mode: SftpFileOpenMode.read);
     final sink = localFile.openWrite();
     try {
-      // The SftpFile exposes a Stream<Uint8List> via read(), so iterate over it
-      final stream = file.read();
-      await for (final chunk in stream) {
-        if (chunk.isEmpty) break;
+      await for (final chunk in remoteFile.read()) {
+        if (chunk.isEmpty) continue;
         sink.add(chunk);
       }
+      await sink.flush();
     } finally {
-      await file.close();
+      await remoteFile.close();
       await sink.close();
     }
   }
@@ -34,7 +45,6 @@ class SftpHelper {
   Future<void> upload(File localFile, String remotePath) async {
     final sftp = await client.sftp();
     final data = await localFile.readAsBytes();
-    // open for write (create/truncate)
     final file = await sftp.open(remotePath, mode: SftpFileOpenMode.write | SftpFileOpenMode.create | SftpFileOpenMode.truncate);
     await file.writeBytes(Uint8List.fromList(data));
     await file.close();

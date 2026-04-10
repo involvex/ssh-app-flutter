@@ -16,7 +16,7 @@ class SftpBrowser extends StatefulWidget {
 
 class _SftpBrowserState extends State<SftpBrowser> {
   String currentPath = '.';
-  List<dynamic> entries = [];
+  List<Map<String, dynamic>> entries = [];
   bool loading = true;
 
   @override
@@ -30,10 +30,26 @@ class _SftpBrowserState extends State<SftpBrowser> {
     final provider = Provider.of<SSHProvider>(context, listen: false);
     final active = provider.sessions.firstWhere((s) => s.id == widget.sessionId);
     final client = active.client!;
-    final helper = SftpHelper(client);
-    final list = await helper.listDir(currentPath);
+    final sftp = await client.sftp();
+    final names = await sftp.listdir(currentPath);
+
+    final List<Map<String, dynamic>> out = [];
+    for (final n in names) {
+      final filename = (n.filename ?? n.name ?? n.toString()).toString();
+      final remotePath = (currentPath == '.' || currentPath == '/') ? filename : '$currentPath/$filename';
+      bool isDir = false;
+      try {
+        final attrs = await sftp.stat(remotePath);
+        isDir = attrs.isDirectory;
+      } catch (_) {
+        isDir = false;
+      }
+      out.add({'name': filename, 'isDirectory': isDir});
+    }
+
+    if (!mounted) return;
     setState(() {
-      entries = list;
+      entries = out;
       loading = false;
     });
   }
@@ -47,7 +63,11 @@ class _SftpBrowserState extends State<SftpBrowser> {
     final picked = await FilePicker.platform.getDirectoryPath();
     if (picked == null) return;
     final local = File('${picked}/$remoteFile');
-    await helper.download('$currentPath/$remoteFile', local);
+
+    final remote = (currentPath == '.' || currentPath == '/') ? remoteFile : '$currentPath/$remoteFile';
+    await helper.downloadStream(remote, local);
+
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Downloaded')));
   }
 
@@ -59,9 +79,11 @@ class _SftpBrowserState extends State<SftpBrowser> {
     final provider = Provider.of<SSHProvider>(context, listen: false);
     final active = provider.sessions.firstWhere((s) => s.id == widget.sessionId);
     final helper = SftpHelper(active.client!);
-    final remotePath = '$currentPath/${result.files.single.name}';
+    final remotePath = (currentPath == '.' || currentPath == '/') ? result.files.single.name : '$currentPath/${result.files.single.name}';
     await helper.upload(file, remotePath);
+    if (!mounted) return;
     await _refresh();
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Uploaded')));
   }
 
@@ -85,21 +107,15 @@ class _SftpBrowserState extends State<SftpBrowser> {
                     itemCount: entries.length,
                     itemBuilder: (context, idx) {
                       final item = entries[idx];
-                      final dynamic it = item;
-                      final String name = it.filename as String;
-                      bool isDir = false;
-                      final attrs = it.attrs;
-                      if (attrs != null) {
-                        final maybeDir = (attrs as dynamic).isDirectory;
-                        if (maybeDir is bool) isDir = maybeDir;
-                      }
+                      final name = item['name'] as String;
+                      final isDir = item['isDirectory'] as bool? ?? false;
 
                       return ListTile(
                         leading: Icon(isDir ? Icons.folder : Icons.insert_drive_file),
                         title: Text(name),
                         onTap: () async {
                           if (isDir) {
-                            setState(() => currentPath = '$currentPath/$name');
+                            setState(() => currentPath = (currentPath == '.' ? name : '$currentPath/$name'));
                             await _refresh();
                           }
                         },
