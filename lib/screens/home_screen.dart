@@ -5,7 +5,6 @@ import 'package:xterm/xterm.dart';
 import 'package:xterm/ui.dart';
 import '../providers/ssh_provider.dart';
 import '../providers/settings_provider.dart';
-import '../widgets/ssh_client_form.dart';
 import '../widgets/ssh_server_form.dart';
 import '../widgets/log_viewer.dart';
 import '../widgets/profile_manager.dart';
@@ -257,8 +256,7 @@ class ClientTab extends StatelessWidget {
                       selected: isActive,
                       label: Text('${s.name} (${s.profile.host}:${s.profile.port})'),
                       onSelected: (_) => ssh.switchActiveSession(s.id),
-                      onLongPress: () async {
-                        // show close option
+                      onPressed: () async {
                         final shouldClose = await showDialog<bool>(
                           context: context,
                           builder: (ctx) => AlertDialog(
@@ -277,9 +275,12 @@ class ClientTab extends StatelessWidget {
                   );
                 }).toList()
                   ..add(
-                    GestureDetector(
-                      onTap: () => _showConnectionModal(),
-                      child: const Chip(label: Icon(Icons.add)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      child: ActionChip(
+                        label: const Icon(Icons.add),
+                        onPressed: () => showDialog<void>(context: context, builder: (c) => const ConnectionModal()),
+                      ),
                     ),
                   ),
             ),
