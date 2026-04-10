@@ -15,6 +15,7 @@ import '../widgets/connection_modal.dart';
 import '../widgets/network_discovery.dart';
 import '../widgets/ctrl_button_panel.dart';
 import '../widgets/snippet_button_panel.dart';
+import '../widgets/sftp_browser.dart';
 import '../screens/settings_screen.dart';
 import '../screens/snippet_config_screen.dart';
 
@@ -239,64 +240,123 @@ class _HomeScreenState extends State<HomeScreen> {
 class ClientTab extends StatelessWidget {
   const ClientTab({super.key});
 
+  Widget _buildSessionTabBar(BuildContext context, SSHProvider ssh) {
+    return Consumer<SSHProvider>(builder: (context, ssh, child) {
+      final sessions = ssh.sessions;
+      return Row(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: sessions.map((s) {
+                  final isActive = ssh.activeSessionId == s.id;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    child: ChoiceChip(
+                      selected: isActive,
+                      label: Text('${s.name} (${s.profile.host}:${s.profile.port})'),
+                      onSelected: (_) => ssh.switchActiveSession(s.id),
+                      onLongPress: () async {
+                        // show close option
+                        final shouldClose = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Close Tab?'),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('No')),
+                              TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Yes')),
+                            ],
+                          ),
+                        );
+                        if (shouldClose == true) {
+                          ssh.removeSession(s.id);
+                        }
+                      },
+                    ),
+                  );
+                }).toList()
+                  ..add(
+                    GestureDetector(
+                      onTap: () => _showConnectionModal(),
+                      child: const Chip(label: Icon(Icons.add)),
+                    ),
+                  ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.folder_open),
+            tooltip: 'SFTP Browser',
+            onPressed: () {
+              if (ssh.activeSession == null || !ssh.activeSession!.isConnected) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Connect to a session first')));
+                return;
+              }
+              showModalBottomSheet(context: context, builder: (_) => SftpBrowser(sessionId: ssh.activeSessionId!));
+            },
+          )
+        ],
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer2<SSHProvider, SettingsProvider>(
       builder: (context, ssh, settings, child) {
         final isHacker = settings.appTheme == AppTheme.hacker;
-        
+
+        final terminalTheme = isHacker
+            ? const TerminalTheme(
+                cursor: Color(0XFFAEAFAD),
+                selection: Color(0XFFAEAFAD),
+                foreground: Colors.greenAccent,
+                background: Color(0XFF000000),
+                black: Color(0XFF000000),
+                red: Color(0XFFCD3131),
+                green: Color(0XFF0DBC79),
+                yellow: Color(0XFFE5E510),
+                blue: Color(0XFF2472C8),
+                magenta: Color(0XFFBC3FBC),
+                cyan: Color(0XFF11A8CD),
+                white: Color(0XFFE5E5E5),
+                brightBlack: Color(0XFF666666),
+                brightRed: Color(0XFFF14C4C),
+                brightGreen: Color(0XFF23D18B),
+                brightYellow: Color(0XFFF5F543),
+                brightBlue: Color(0XFF3B8EEA),
+                brightMagenta: Color(0XFFD670D6),
+                brightCyan: Color(0XFF29B8DB),
+                brightWhite: Color(0XFFFFFFFF),
+                searchHitBackground: Color(0XFFFFFF2B),
+                searchHitBackgroundCurrent: Color(0XFF31FF26),
+                searchHitForeground: Color(0XFF000000),
+              )
+            : TerminalThemes.defaultTheme;
+
         return Column(
           children: <Widget>[
-            if (!ssh.isClientConnected)
-              const Expanded(child: SSHClientForm())
-            else
-              Expanded(
-                child: Builder(
-                  builder: (context) {
-                    final terminalTheme = isHacker
-                        ? const TerminalTheme(
-                            cursor: Color(0XFFAEAFAD),
-                            selection: Color(0XFFAEAFAD),
-                            foreground: Colors.greenAccent,
-                            background: Color(0XFF000000),
-                            black: Color(0XFF000000),
-                            red: Color(0XFFCD3131),
-                            green: Color(0XFF0DBC79),
-                            yellow: Color(0XFFE5E510),
-                            blue: Color(0XFF2472C8),
-                            magenta: Color(0XFFBC3FBC),
-                            cyan: Color(0XFF11A8CD),
-                            white: Color(0XFFE5E5E5),
-                            brightBlack: Color(0XFF666666),
-                            brightRed: Color(0XFFF14C4C),
-                            brightGreen: Color(0XFF23D18B),
-                            brightYellow: Color(0XFFF5F543),
-                            brightBlue: Color(0XFF3B8EEA),
-                            brightMagenta: Color(0XFFD670D6),
-                            brightCyan: Color(0XFF29B8DB),
-                            brightWhite: Color(0XFFFFFFFF),
-                            searchHitBackground: Color(0XFFFFFF2B),
-                            searchHitBackgroundCurrent: Color(0XFF31FF26),
-                            searchHitForeground: Color(0XFF000000),
-                          )
-                        : TerminalThemes.defaultTheme;
-
-                    return Container(
-                      color: terminalTheme.background,
-                      child: TerminalView(
-                        ssh.terminal,
-                        padding: const EdgeInsets.all(8),
-                        theme: terminalTheme,
-                        textStyle: const TerminalStyle(
-                          fontSize: 14,
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            if (ssh.isClientConnected)
+            _buildSessionTabBar(context, Provider.of<SSHProvider>(context, listen: false)),
+            Expanded(
+              child: Consumer<SSHProvider>(builder: (context, ssh, child) {
+                final active = ssh.activeSession;
+                if (active == null) return const Center(child: Text('No session. Click + to connect'));
+                if (!active.isConnected) return const Center(child: Text('Connecting...'));
+                return Container(
+                  color: terminalTheme.background,
+                  child: TerminalView(
+                    active.terminal,
+                    padding: const EdgeInsets.all(8),
+                    theme: terminalTheme,
+                    textStyle: const TerminalStyle(
+                      fontSize: 14,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                );
+              }),
+            ),
+            if (ssh.sessions.any((s) => s.isConnected))
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                 child: Wrap(
@@ -309,11 +369,16 @@ class ClientTab extends StatelessWidget {
                   ],
                 ),
               ),
-            if (ssh.isClientConnected)
+            if (ssh.sessions.any((s) => s.isConnected))
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: OutlinedButton.icon(
-                  onPressed: () => ssh.disconnectClient(),
+                  onPressed: () {
+                    final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
+                    if (active != null) {
+                      Provider.of<SSHProvider>(context, listen: false).disconnectSession(active.id);
+                    }
+                  },
                   icon: const Icon(Icons.close),
                   label: const Text('Disconnect'),
                   style: OutlinedButton.styleFrom(
