@@ -4,15 +4,17 @@ import 'package:flutter/foundation.dart';
 import 'package:dartssh2/dartssh2.dart';
 import 'package:xterm/xterm.dart';
 import 'package:network_info_plus/network_info_plus.dart';
+
 import '../models/ssh_profile.dart';
 import '../services/config_service.dart';
 import '../services/network_discovery_service.dart';
+import '../models/session_entry.dart';
 
 class SSHProvider extends ChangeNotifier {
-  SSHClient? _client;
-  SSHSession? _session;
-  Terminal terminal = Terminal();
-  bool isClientConnected = false;
+  // sessions container
+  final List<SessionEntry> sessions = <SessionEntry>[];
+  String? activeSessionId;
+
   bool isServerRunning = false;
   int serverPort = 22;
   String? serverAddress;
@@ -78,6 +80,113 @@ class SSHProvider extends ChangeNotifier {
     }
   }
 
+  // Session APIs
+  SessionEntry createSessionFromProfile(SSHProfile profile, {String? name}) {
+    if (sessions.length >= 4) {
+      throw StateError('Maximum number of sessions (4) reached');
+    }
+    final entry = SessionEntry(name: name ?? profile.name, profile: profile);
+    sessions.add(entry);
+    activeSessionId = entry.id;
+    notifyListeners();
+    return entry;
+  }
+
+  void switchActiveSession(String sessionId) {
+    if (activeSessionId == sessionId) return;
+    if (!sessions.any((s) => s.id == sessionId)) return;
+    activeSessionId = sessionId;
+    notifyListeners();
+  }
+
+  SessionEntry? get activeSession {
+    if (activeSessionId == null) return null;
+    try {
+      return sessions.firstWhere((s) => s.id == activeSessionId);
+    } catch (_) {
+      return sessions.isNotEmpty ? sessions.first : null;
+    }
+  }
+
+  Future<void> connectSession(String sessionId) async {
+    final entry = sessions.firstWhere((s) => s.id == sessionId);
+    final profile = entry.profile;
+
+    try {
+      addLog('Connecting to ${profile.host}:${profile.port}...');
+      final socket = await SSHSocket.connect(profile.host, profile.port);
+      final client = SSHClient(
+        socket,
+        username: profile.username,
+        onPasswordRequest: () => profile.password,
+      );
+
+      final shell = await client.shell(
+        pty: const SSHPtyConfig(width: 80, height: 24),
+      );
+
+      entry.client = client;
+      entry.shellSession = shell;
+
+      shell.stdout.listen((data) {
+        entry.terminal.write(utf8.decode(data));
+      });
+      shell.stderr.listen((data) {
+        entry.terminal.write(utf8.decode(data));
+      });
+      entry.terminal.onOutput = (data) {
+        shell.stdin.add(utf8.encode(data));
+      };
+
+      unawaited(shell.done.then((_) async {
+        addLog('Session ${entry.name} closed');
+        entry.isConnected = false;
+        notifyListeners();
+      }));
+
+      entry.isConnected = true;
+      addLog('Connected: ${entry.name}');
+      notifyListeners();
+
+      if (profile.startupCommand?.isNotEmpty ?? false) {
+        shell.stdin.add(utf8.encode('${profile.startupCommand}\r'));
+        addLog('Executed startup command for ${entry.name}');
+      }
+    } catch (e) {
+      addLog('Connection failed for ${profile.host}:${profile.port} — $e');
+      rethrow;
+    }
+  }
+
+  Future<void> disconnectSession(String sessionId) async {
+    final entry = sessions.firstWhere((s) => s.id == sessionId, orElse: () => throw StateError('Session not found'));
+    entry.shellSession?.close();
+    entry.client?.close();
+    entry.isConnected = false;
+    entry.terminal = Terminal();
+    notifyListeners();
+  }
+
+  Future<void> removeSession(String sessionId) async {
+    final idx = sessions.indexWhere((s) => s.id == sessionId);
+    if (idx == -1) return;
+    final entry = sessions.removeAt(idx);
+    entry.disposeRuntime();
+    if (activeSessionId == sessionId) {
+      activeSessionId = sessions.isNotEmpty ? sessions.first.id : null;
+    }
+    notifyListeners();
+  }
+
+  Future<List<dynamic>> sftpList(String sessionId, String path) async {
+    final entry = sessions.firstWhere((s) => s.id == sessionId);
+    final client = entry.client;
+    if (client == null) throw StateError('Session not connected');
+    final sftp = await client.sftp();
+    final list = await sftp.listdir(path);
+    return list;
+  }
+
   Future<void> connectClient({
     required String host,
     required int port,
@@ -85,79 +194,10 @@ class SSHProvider extends ChangeNotifier {
     required String password,
     String? startupCommand,
   }) async {
-    try {
-      addLog('Connecting to $host:$port...');
-
-      final socket = await SSHSocket.connect(host, port);
-      _client = SSHClient(
-        socket,
-        username: username,
-        onPasswordRequest: () => password,
-      );
-
-      _session = await _client!.shell(
-        pty: const SSHPtyConfig(
-          width: 80,
-          height: 24,
-        ),
-      );
-
-      _session!.stdout.listen((data) {
-        terminal.write(utf8.decode(data));
-      });
-
-      _session!.stderr.listen((data) {
-        terminal.write(utf8.decode(data));
-      });
-
-      terminal.onOutput = (data) {
-        _session!.stdin.add(utf8.encode(data));
-      };
-
-      unawaited(_session!.done.then((_) async {
-        addLog('Connection closed');
-        isClientConnected = false;
-        notifyListeners();
-      }));
-
-      isClientConnected = true;
-      addLog('Connected successfully');
-
-      if (startupCommand != null && startupCommand.isNotEmpty) {
-        // Prefer running the command as a single non-interactive PowerShell
-        // invocation so it doesn't rely on profile/login shell behavior and
-        // avoids "press Enter" issues. Use the full git.exe path as a
-        // fallback when PATH is unreliable on remote SSH sessions.
-        final escaped = startupCommand.replaceAll("'", "''");
-        const gitFullPath = r'C:\Program Files\Git\cmd\git.exe';
-
-        // Detect simple git commands and wrap them in a PowerShell -NoProfile
-        // invocation using the full git path. Otherwise fall back to the
-        // existing behaviour of writing into the shell.
-        final trimmed = startupCommand.trim();
-        final isGit = trimmed.toLowerCase().startsWith('git ');
-
-        if (isGit) {
-          final psCmd = "powershell -NoProfile -Command \"& '$gitFullPath' $escaped\"";
-          try {
-            _session!.stdin.add(utf8.encode('$psCmd\r'));
-            addLog('Executed startup command via PowerShell wrapper: $psCmd');
-          } catch (e) {
-            _session!.stdin.add(utf8.encode('$startupCommand\r'));
-            addLog('Fallback: Executed startup command raw: $startupCommand');
-          }
-        } else {
-          // non-git commands: send to shell (retain previous behaviour)
-          _session!.stdin.add(utf8.encode('$startupCommand\r'));
-          addLog('Executed startup command: $startupCommand');
-        }
-      }
-
-      notifyListeners();
-    } catch (e) {
-      addLog('Connection failed: $e');
-      rethrow;
-    }
+    // Backwards-compatible wrapper: create a temp profile and session
+    final profile = SSHProfile(name: 'Last Session', host: host, port: port, username: username, password: password, startupCommand: startupCommand);
+    final entry = createSessionFromProfile(profile);
+    await connectSession(entry.id);
   }
 
   Future<void> startServer({
@@ -188,25 +228,18 @@ class SSHProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void disconnectClient() {
-    _session?.close();
-    _client?.close();
-    isClientConnected = false;
-    terminal = Terminal();
-    addLog('Disconnected');
-    notifyListeners();
-  }
-
   void sendControlCharacter(int charCode) {
-    if (_session != null && isClientConnected) {
-      _session!.stdin.add(Uint8List.fromList([charCode]));
+    final entry = activeSession;
+    if (entry != null && entry.shellSession != null && entry.isConnected) {
+      entry.shellSession!.stdin.add(Uint8List.fromList([charCode]));
       addLog('Sent Ctrl+$_getCtrlLabel(charCode)');
     }
   }
 
   void sendString(String data) {
-    if (_session != null && isClientConnected) {
-      _session!.stdin.add(utf8.encode(data));
+    final entry = activeSession;
+    if (entry != null && entry.shellSession != null && entry.isConnected) {
+      entry.shellSession!.stdin.add(utf8.encode(data));
     }
   }
 
@@ -240,8 +273,9 @@ class SSHProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _session?.close();
-    _client?.close();
+    for (final s in sessions) {
+      s.disposeRuntime();
+    }
     super.dispose();
   }
 }
