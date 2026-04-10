@@ -16,7 +16,7 @@ class SftpBrowser extends StatefulWidget {
 
 class _SftpBrowserState extends State<SftpBrowser> {
   String currentPath = '.';
-  List<dynamic> entries = [];
+  List<SftpName> entries = [];
   bool loading = true;
 
   @override
@@ -85,8 +85,8 @@ class _SftpBrowserState extends State<SftpBrowser> {
                     itemCount: entries.length,
                     itemBuilder: (context, idx) {
                       final item = entries[idx];
-                      final name = (item as dynamic).filename ?? (item as dynamic).name ?? item.toString();
-                      final isDir = (item as dynamic).attrs != null && (item as dynamic).attrs.isDirectory;
+                      final name = item.filename;
+                      final isDir = item.attrs != null && item.attrs.isDirectory;
                       return ListTile(
                         leading: Icon(isDir ? Icons.folder : Icons.insert_drive_file),
                         title: Text(name),

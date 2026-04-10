@@ -46,7 +46,7 @@ class KeyboardShortcutBar extends StatelessWidget {
             final shortcuts = settings.getShortcutsByRow(rowIndex);
             return _ShortcutRow(
               shortcuts: shortcuts,
-              isConnected: ssh.isClientConnected,
+              isConnected: ssh.activeSession?.isConnected ?? false,
             );
           }),
         );
@@ -201,10 +201,10 @@ class _ShortcutChip extends StatelessWidget {
             }
         break;
       case ShortcutAction.home:
-        if (isConnected) ssh.terminal.keyInput(TerminalKey.home);
+        if (isConnected) { final active = ssh.activeSession; if (active != null) active.terminal.keyInput(TerminalKey.home); }
         break;
       case ShortcutAction.end:
-        if (isConnected) ssh.terminal.keyInput(TerminalKey.end);
+        if (isConnected) { final active = ssh.activeSession; if (active != null) active.terminal.keyInput(TerminalKey.end); }
         break;
       }
   }

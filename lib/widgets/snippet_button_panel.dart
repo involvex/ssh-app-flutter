@@ -39,7 +39,7 @@ class SnippetButtonPanel extends StatelessWidget {
                       style: const TextStyle(fontSize: 12),
                     ),
                     padding: EdgeInsets.zero,
-                    onPressed: () => ssh.terminal.write('${s.content}\n'),
+                    onPressed: () { final active = ssh.activeSession; if (active != null && active.isConnected) active.terminal.write('${s.content}\n'); }
                     backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
                     labelStyle: TextStyle(
                       color: Theme.of(context).colorScheme.onSecondaryContainer,
@@ -145,7 +145,7 @@ class _SnippetSelectionSheet extends StatelessWidget {
                           style: theme.textTheme.bodySmall,
                         ),
                         onTap: () {
-                          ssh.terminal.write('${snippet.content}\n');
+                          final active = ssh.activeSession; if (active != null && active.isConnected) active.terminal.write('${snippet.content}\n');
                           Navigator.pop(context);
                         },
                       );
