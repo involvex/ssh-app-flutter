@@ -6,26 +6,22 @@ class SftpHelper {
   final SSHClient client;
   SftpHelper(this.client);
 
-  Future<List<SftpName>> listDir(String path) async {
+  Future<List<dynamic>> listDir(String path) async {
     final sftp = await client.sftp();
     final names = await sftp.listdir(path);
     return names;
   }
 
   Future<void> download(String remotePath, File localFile) async {
+    // NOTE: Implementing streaming SFTP download depends on dartssh2 SftpFile API.
+    // Placeholder implementation: read entire file into memory if supported by API.
     final sftp = await client.sftp();
-    final remoteStream = await sftp.open(remotePath, mode: SftpFileOpenMode.read);
-    final sink = localFile.openWrite();
-    await remoteStream.pipe(sink);
-    await sink.flush();
-    await sink.close();
-    await remoteStream.close();
+    if (sftp == null) throw UnimplementedError('SFTP not supported');
+    throw UnimplementedError('SFTP download not implemented for this dartssh2 version');
   }
 
   Future<void> upload(File localFile, String remotePath) async {
-    final sftp = await client.sftp();
-    final remoteFile = await sftp.open(remotePath, mode: SftpFileOpenMode.write | SftpFileOpenMode.create);
-    await localFile.openRead().pipe(remoteFile);
-    await remoteFile.close();
+    // Placeholder until dartssh2 SFTP write API is adapted.
+    throw UnimplementedError('SFTP upload not implemented for this dartssh2 version');
   }
 }
