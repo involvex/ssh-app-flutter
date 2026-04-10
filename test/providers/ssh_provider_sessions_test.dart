@@ -1,8 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ssh_app/providers/ssh_provider.dart';
 import 'package:ssh_app/models/ssh_profile.dart';
+import 'package:ssh_app/services/config_service.dart';
 
 void main() {
+  setUp(() async {
+    // Provide an in-memory SharedPreferences for tests and init ConfigService.
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    await ConfigService.init();
+  });
+
   test('can create and switch up to 4 sessions', () {
     final provider = SSHProvider();
     for (var i = 0; i < 4; i++) {

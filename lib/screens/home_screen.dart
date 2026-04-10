@@ -242,32 +242,34 @@ class ClientTab extends StatelessWidget {
   Widget _buildSessionTabBar(BuildContext context, SSHProvider ssh) {
     return Consumer<SSHProvider>(builder: (context, ssh, child) {
       final sessions = ssh.sessions;
+      final chips = sessions.map((s) {
+        final isActive = ssh.activeSessionId == s.id;
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: ChoiceChip(
+            selected: isActive,
+            label: Text('${s.name} (${s.profile.host}:${s.profile.port})'),
+            onSelected: (_) => ssh.switchActiveSession(s.id),
+          ),
+        );
+      }).toList();
+
+      chips.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: GestureDetector(
+            onTap: () => showDialog<void>(context: context, builder: (c) => const ConnectionModal()),
+            child: const Chip(label: Icon(Icons.add)),
+          ),
+        ),
+      );
+
       return Row(
         children: [
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: Row(
-                children: sessions.map((s) {
-                  final isActive = ssh.activeSessionId == s.id;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    child: ChoiceChip(
-                      selected: isActive,
-                      label: Text('${s.name} (${s.profile.host}:${s.profile.port})'),
-                      onSelected: (_) => ssh.switchActiveSession(s.id),
-                    ),
-                  );
-                }).toList()
-                  ..add(
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                      child: GestureDetector(
-                        onTap: () => showDialog<void>(context: context, builder: (c) => const ConnectionModal()),
-                        child: const Chip(label: Icon(Icons.add)),
-                      ),
-                    ),
-                  ),
+              child: Row(children: chips),
             ),
           ),
           IconButton(
@@ -280,7 +282,7 @@ class ClientTab extends StatelessWidget {
               }
               showModalBottomSheet(context: context, builder: (_) => SftpBrowser(sessionId: ssh.activeSessionId!));
             },
-          )
+          ),
         ],
       );
     });

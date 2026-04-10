@@ -1,24 +1,35 @@
 // lib/services/sftp_helper.dart
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:dartssh2/dartssh2.dart';
 
 class SftpHelper {
   final SSHClient client;
   SftpHelper(this.client);
 
-  Future<List<SftpName>> listDir(String path) async {
+  Future<List<dynamic>> listDir(String path) async {
     final sftp = await client.sftp();
     final names = await sftp.listdir(path);
-    return names; // List<SftpName>
+    return names;
   }
 
   Future<void> download(String remotePath, File localFile) async {
     final sftp = await client.sftp();
     final file = await sftp.open(remotePath, mode: SftpFileOpenMode.read);
-    // Use readBytes to get full content (the API provides streaming read as well)
-    final bytes = await file.readBytes();
-    await file.close();
-    await localFile.writeAsBytes(bytes);
+    // Stream the remote file in chunks and write to the local file to avoid OOM on large files.
+    final sink = localFile.openWrite();
+    try {
+      const int chunkSize = 32 * 1024; // 32 KB
+      // The SftpFile exposes a Stream<Uint8List> via read(), so iterate over it
+      final stream = file.read();
+      await for (final chunk in stream) {
+        if (chunk.isEmpty) break;
+        sink.add(chunk);
+      }
+    } finally {
+      await file.close();
+      await sink.close();
+    }
   }
 
   Future<void> upload(File localFile, String remotePath) async {

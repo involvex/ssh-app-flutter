@@ -21,7 +21,7 @@ class SnippetButtonPanel extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(128),
             borderRadius: BorderRadius.circular(16),
           ),
           child: SingleChildScrollView(
@@ -39,8 +39,11 @@ class SnippetButtonPanel extends StatelessWidget {
                       style: const TextStyle(fontSize: 12),
                     ),
                     padding: EdgeInsets.zero,
-                    onPressed: () { final active = ssh.activeSession; if (active != null && active.isConnected) active.terminal.write('${s.content}\n'); }
-                    backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                    onPressed: () {
+                          final active = ssh.activeSession;
+                          if (active != null && active.isConnected) active.terminal.write('${s.content}\n');
+                        },
+                        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
                     labelStyle: TextStyle(
                       color: Theme.of(context).colorScheme.onSecondaryContainer,
                     ),
