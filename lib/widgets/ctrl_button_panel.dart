@@ -36,31 +36,52 @@ class CtrlButtonPanel extends StatelessWidget {
               const SizedBox(width: 8),
               _NavButton(
                 label: 'Tab',
-                onTap: () => ssh.terminal.keyInput(TerminalKey.tab),
+                onTap: () {
+                  final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
+                  if (active != null) active.terminal.keyInput(TerminalKey.tab);
+                },
               ),
               _NavButton(
                 label: '←',
-                onTap: () => ssh.terminal.keyInput(TerminalKey.arrowLeft),
+                onTap: () {
+                  final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
+                  if (active != null) active.terminal.keyInput(TerminalKey.arrowLeft);
+                },
               ),
               _NavButton(
                 label: '→',
-                onTap: () => ssh.terminal.keyInput(TerminalKey.arrowRight),
+                onTap: () {
+                  final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
+                  if (active != null) active.terminal.keyInput(TerminalKey.arrowRight);
+                },
               ),
               _NavButton(
                 label: '↑',
-                onTap: () => ssh.terminal.keyInput(TerminalKey.arrowUp),
+                onTap: () {
+                  final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
+                  if (active != null) active.terminal.keyInput(TerminalKey.arrowUp);
+                },
               ),
               _NavButton(
                 label: '↓',
-                onTap: () => ssh.terminal.keyInput(TerminalKey.arrowDown),
+                onTap: () {
+                  final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
+                  if (active != null) active.terminal.keyInput(TerminalKey.arrowDown);
+                },
               ),
               _NavButton(
                 label: 'Home',
-                onTap: () => ssh.terminal.keyInput(TerminalKey.home),
+                onTap: () {
+                  final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
+                  if (active != null) active.terminal.keyInput(TerminalKey.home);
+                },
               ),
               _NavButton(
                 label: 'End',
-                onTap: () => ssh.terminal.keyInput(TerminalKey.end),
+                onTap: () {
+                  final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
+                  if (active != null) active.terminal.keyInput(TerminalKey.end);
+                },
               ),
             ],
           ),
