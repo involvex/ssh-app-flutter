@@ -69,16 +69,10 @@ class _ConnectionModalState extends State<ConnectionModal> {
           sshKeyType: null,
         );
       } else {
-        await ssh.connectClient(
-          host: profile.host,
-          port: profile.port,
-          username: profile.username,
-          password: profile.password ?? '',
-          startupCommand: profile.startupCommand,
-        );
-      }
-      if (mounted) {
-        Navigator.pop(context);
+        // create a new session entry then connect it
+        final entry = ssh.createSessionFromProfile(profile, name: profile.name);
+        await ssh.connectSession(entry.id);
+        if (mounted) Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
