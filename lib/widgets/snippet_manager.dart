@@ -161,8 +161,9 @@ class SnippetManager extends StatelessWidget {
 
   void _useSnippet(BuildContext context, Snippet snippet) {
     final ssh = Provider.of<SSHProvider>(context, listen: false);
-    if (ssh.isClientConnected) {
-      ssh.terminal.write('${snippet.content}\n');
+    final active = ssh.activeSession;
+    if (active != null && active.isConnected) {
+      active.terminal.write('${snippet.content}\n');
       Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
