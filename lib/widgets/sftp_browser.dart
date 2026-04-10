@@ -117,6 +117,8 @@ class _SftpBrowserState extends State<SftpBrowser> {
                         onTap: () async {
                           if (isDir) {
                             setState(() => currentPath = (currentPath == '.' ? name : '$currentPath/$name'));
+                            // We're intentionally awaiting _refresh() here; it captures needed context before async work.
+                            // ignore: use_build_context_synchronously
                             await _refresh();
                           }
                         },
