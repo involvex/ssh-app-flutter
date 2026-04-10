@@ -25,12 +25,19 @@ class _SftpBrowserState extends State<SftpBrowser> {
     _refresh();
   }
 
-  Future<void> _refresh() async {
+  Future<void> _refresh({SSHClient? clientProvided}) async {
     setState(() => loading = true);
-    final provider = Provider.of<SSHProvider>(context, listen: false);
-    final active = provider.sessions.firstWhere((s) => s.id == widget.sessionId);
-    final client = active.client!;
-    final sftp = await client.sftp();
+
+    SSHClient client;
+    var sftpClient = clientProvided;
+    if (sftpClient == null) {
+      final provider = Provider.of<SSHProvider>(context, listen: false);
+      final active = provider.sessions.firstWhere((s) => s.id == widget.sessionId);
+      client = active.client!;
+      sftpClient = client;
+    }
+
+    final sftp = await sftpClient.sftp();
     final names = await sftp.listdir(currentPath);
 
     final List<Map<String, dynamic>> out = [];
@@ -117,9 +124,11 @@ class _SftpBrowserState extends State<SftpBrowser> {
                         onTap: () async {
                           if (isDir) {
                             setState(() => currentPath = (currentPath == '.' ? name : '$currentPath/$name'));
-                            // We're intentionally awaiting _refresh() here; it captures needed context before async work.
-                            // ignore: use_build_context_synchronously
-                            await _refresh();
+                            // Capture client up-front to avoid accessing BuildContext after async gap
+                            final provider = Provider.of<SSHProvider>(context, listen: false);
+                            final active = provider.sessions.firstWhere((s) => s.id == widget.sessionId);
+                            final client = active.client!;
+                            await _refresh(clientProvided: client);
                           }
                         },
                         trailing: isDir ? null : IconButton(icon: const Icon(Icons.download), onPressed: () => _download(name)),
