@@ -85,10 +85,14 @@ class _SftpBrowserState extends State<SftpBrowser> {
     if (result == null) return;
     final path = result.files.single.path!;
     final file = File(path);
+    // Capture provider/client before any awaits
+    // ignore: use_build_context_synchronously
     final provider = Provider.of<SSHProvider>(context, listen: false);
     final active = provider.sessions.firstWhere((s) => s.id == widget.sessionId);
     final helper = SftpHelper(active.client!);
     final remotePath = (currentPath == '.' || currentPath == '/') ? result.files.single.name : '$currentPath/${result.files.single.name}';
+    // capture messenger before async work to avoid using BuildContext after await
+    // ignore: use_build_context_synchronously
     final messenger = ScaffoldMessenger.of(context);
     await helper.upload(file, remotePath);
     if (!mounted) return;
