@@ -8,9 +8,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:ssh_app/main.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:ssh_app/services/config_service.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {

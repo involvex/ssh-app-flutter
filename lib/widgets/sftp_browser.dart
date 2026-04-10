@@ -62,7 +62,7 @@ class _SftpBrowserState extends State<SftpBrowser> {
 
     final picked = await FilePicker.platform.getDirectoryPath();
     if (picked == null) return;
-    final local = File('${picked}/$remoteFile');
+    final local = File('$picked/$remoteFile');
 
     final remote = (currentPath == '.' || currentPath == '/') ? remoteFile : '$currentPath/$remoteFile';
     await helper.downloadStream(remote, local);
