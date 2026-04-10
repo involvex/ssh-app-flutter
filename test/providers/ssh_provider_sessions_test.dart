@@ -24,7 +24,7 @@ void main() {
 
   test('remove session updates activeSession', () {
     final provider = SSHProvider();
-    final p1 = provider.createSessionFromProfile(SSHProfile(name: 'a', host: 'a', username: 'u'));
+    provider.createSessionFromProfile(SSHProfile(name: 'a', host: 'a', username: 'u'));
     final p2 = provider.createSessionFromProfile(SSHProfile(name: 'b', host: 'b', username: 'u'));
     provider.removeSession(p2.id);
     expect(provider.activeSessionId, provider.sessions.first.id);
