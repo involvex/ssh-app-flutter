@@ -71,7 +71,8 @@ class _HomeScreenState extends State<HomeScreen> {
           backgroundColor: Color(0xFF16213E),
           content: Row(
             children: [
-              SizedBox(width: 24, height: 24, child: CircularProgressIndicator()),
+              SizedBox(
+                  width: 24, height: 24, child: CircularProgressIndicator()),
               SizedBox(width: 16),
               Text('Connecting...'),
             ],
@@ -151,7 +152,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return KeyboardListener(
-      focusNode: FocusNode()..requestFocus(), // Request focus so keyboard listener receives events
+      focusNode: FocusNode()
+        ..requestFocus(), // Request focus so keyboard listener receives events
       onKeyEvent: _handleKeyEvent,
       child: Scaffold(
         appBar: AppBar(
@@ -188,7 +190,8 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const SettingsScreen()),
                 );
               },
             ),
@@ -245,11 +248,17 @@ class ClientTab extends StatelessWidget {
       final chips = sessions.map((s) {
         final isActive = ssh.activeSessionId == s.id;
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-          child: ChoiceChip(
+          padding: const EdgeInsets.symmetric(horizontal: 2.0),
+          child: InputChip(
             selected: isActive,
+            avatar: CircleAvatar(
+              radius: 4,
+              backgroundColor: s.isConnected ? Colors.green : Colors.red,
+            ),
             label: Text('${s.name} (${s.profile.host}:${s.profile.port})'),
-            onSelected: (_) => ssh.switchActiveSession(s.id),
+            onPressed: () => ssh.switchActiveSession(s.id),
+            deleteIcon: const Icon(Icons.close, size: 16),
+            onDeleted: () => ssh.removeSession(s.id),
           ),
         );
       }).toList();
@@ -258,7 +267,8 @@ class ClientTab extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4.0),
           child: GestureDetector(
-            onTap: () => showDialog<void>(context: context, builder: (c) => const ConnectionModal()),
+            onTap: () => showDialog<void>(
+                context: context, builder: (c) => const ConnectionModal()),
             child: const Chip(label: Icon(Icons.add)),
           ),
         ),
@@ -276,11 +286,15 @@ class ClientTab extends StatelessWidget {
             icon: const Icon(Icons.folder_open),
             tooltip: 'SFTP Browser',
             onPressed: () {
-              if (ssh.activeSession == null || !ssh.activeSession!.isConnected) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Connect to a session first')));
+              if (ssh.activeSession == null ||
+                  !ssh.activeSession!.isConnected) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Connect to a session first')));
                 return;
               }
-              showModalBottomSheet(context: context, builder: (_) => SftpBrowser(sessionId: ssh.activeSessionId!));
+              showModalBottomSheet(
+                  context: context,
+                  builder: (_) => SftpBrowser(sessionId: ssh.activeSessionId!));
             },
           ),
         ],
@@ -324,20 +338,66 @@ class ClientTab extends StatelessWidget {
 
         return Column(
           children: <Widget>[
-    _buildSessionTabBar(context),
+            _buildSessionTabBar(context),
             Expanded(
               child: Consumer<SSHProvider>(builder: (context, ssh, child) {
                 final active = ssh.activeSession;
-                if (active == null) return const Center(child: Text('No session. Click + to connect'));
-                if (!active.isConnected) return const Center(child: Text('Not connected'));
+                if (active == null) {
+                  return const Center(
+                      child: Text('No session. Click + to connect'));
+                }
+                if (!active.isConnected) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Not connected'),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            FilledButton.icon(
+                              onPressed: () async {
+                                try {
+                                  await ssh.connectSession(active.id);
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Reconnect failed: $e'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Reconnect'),
+                            ),
+                            const SizedBox(width: 16),
+                            OutlinedButton.icon(
+                              onPressed: () => ssh.removeSession(active.id),
+                              icon: const Icon(Icons.close),
+                              label: const Text('Close'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red,
+                                side: const BorderSide(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                }
                 return Container(
                   color: terminalTheme.background,
                   child: TerminalView(
                     active.terminal,
                     padding: const EdgeInsets.all(8),
                     theme: terminalTheme,
-                    textStyle: const TerminalStyle(
-                      fontSize: 14,
+                    textStyle: TerminalStyle(
+                      fontSize: settings.terminalFontSize,
                       fontFamily: 'monospace',
                     ),
                   ),
@@ -362,9 +422,12 @@ class ClientTab extends StatelessWidget {
                 padding: const EdgeInsets.all(8.0),
                 child: OutlinedButton.icon(
                   onPressed: () async {
-                    final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
+                    final active =
+                        Provider.of<SSHProvider>(context, listen: false)
+                            .activeSession;
                     if (active != null) {
-                      await Provider.of<SSHProvider>(context, listen: false).disconnectSession(active.id);
+                      await Provider.of<SSHProvider>(context, listen: false)
+                          .disconnectSession(active.id);
                     }
                   },
                   icon: const Icon(Icons.close),
@@ -403,7 +466,8 @@ class ServerTab extends StatelessWidget {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
-                          const Icon(Icons.check_circle, color: Colors.green, size: 64),
+                          const Icon(Icons.check_circle,
+                              color: Colors.green, size: 64),
                           const SizedBox(height: 16),
                           Text(
                             'SSH Server is Running',
@@ -419,7 +483,8 @@ class ServerTab extends StatelessWidget {
                             onPressed: () => ssh.stopServer(),
                             icon: const Icon(Icons.stop),
                             label: const Text('Stop Server'),
-                            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                            style: FilledButton.styleFrom(
+                                backgroundColor: Colors.red),
                           ),
                         ],
                       ),

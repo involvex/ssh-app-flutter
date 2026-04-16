@@ -7,13 +7,15 @@ class SftpHelper {
   final SSHClient client;
   SftpHelper(this.client);
 
-  Future<List<Map<String,dynamic>>> listDirWithType(String path) async {
+  Future<List<Map<String, dynamic>>> listDirWithType(String path) async {
     final sftp = await client.sftp();
     final names = await sftp.listdir(path);
-    return names.map((n) => <String, dynamic>{
-      'name': n.filename.toString(),
-      'isDirectory': n.attr.isDirectory,
-    }).toList();
+    return names
+        .map((n) => <String, dynamic>{
+              'name': n.filename.toString(),
+              'isDirectory': n.attr.isDirectory,
+            })
+        .toList();
   }
 
   Future<void> downloadStream(String remotePath, File localFile) async {
@@ -34,7 +36,10 @@ class SftpHelper {
 
   Future<void> upload(File localFile, String remotePath) async {
     final sftp = await client.sftp();
-    final file = await sftp.open(remotePath, mode: SftpFileOpenMode.write | SftpFileOpenMode.create | SftpFileOpenMode.truncate);
+    final file = await sftp.open(remotePath,
+        mode: SftpFileOpenMode.write |
+            SftpFileOpenMode.create |
+            SftpFileOpenMode.truncate);
     try {
       var offset = 0;
       await for (final chunk in localFile.openRead()) {
@@ -45,5 +50,43 @@ class SftpHelper {
     } finally {
       await file.close();
     }
+  }
+
+  Future<List<String>> listDrives() async {
+    final sftp = await client.sftp();
+    final drives = <String>[];
+    for (final letter in [
+      'C',
+      'D',
+      'E',
+      'F',
+      'G',
+      'H',
+      'I',
+      'J',
+      'K',
+      'L',
+      'M',
+      'N',
+      'O',
+      'P',
+      'Q',
+      'R',
+      'S',
+      'T',
+      'U',
+      'V',
+      'W',
+      'X',
+      'Y',
+      'Z'
+    ]) {
+      try {
+        final path = '$letter:/';
+        await sftp.listdir(path);
+        drives.add(letter);
+      } catch (_) {}
+    }
+    return drives;
   }
 }

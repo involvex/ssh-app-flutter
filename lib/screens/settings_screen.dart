@@ -44,7 +44,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SnackBar(content: Text(message)),
         );
         // Reload settings provider so theme/shortcuts update immediately
-        await Provider.of<SettingsProvider>(context, listen: false).loadSettings();
+        await Provider.of<SettingsProvider>(context, listen: false)
+            .loadSettings();
       }
     } catch (e) {
       if (mounted) {
@@ -71,18 +72,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              const Text('Appearance', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text('Appearance',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               const ThemePicker(),
               const Divider(height: 32),
-              const Text('Keyboard Shortcuts', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text('Terminal',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Font Size'),
+                          Text('${settings.terminalFontSize.toInt()}'),
+                        ],
+                      ),
+                      Slider(
+                        value: settings.terminalFontSize,
+                        min: 8,
+                        max: 24,
+                        divisions: 16,
+                        onChanged: (val) => settings.setTerminalFontSize(val),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const Divider(height: 32),
+              const Text('Keyboard Shortcuts',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               const Card(
                 child: ExpansionTile(
                   leading: Icon(Icons.keyboard),
                   title: Text('Configure Shortcuts'),
                   subtitle: Text('Customize keyboard shortcuts'),
-                  childrenPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  childrenPadding:
+                      EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   children: [
                     KeyboardShortcutBar(showRow: 1, forceShowOnMobile: true),
                     SizedBox(height: 8),
@@ -91,7 +123,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const Divider(height: 32),
-              const Text('Backup & Restore', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text('Backup & Restore',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               Card(
                 child: Column(
@@ -99,7 +132,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ListTile(
                       leading: const Icon(Icons.upload_outlined),
                       title: const Text('Export Backup'),
-                      subtitle: const Text('Save profiles, SSH keys, snippets & settings to a file'),
+                      subtitle: const Text(
+                          'Save profiles, SSH keys, snippets & settings to a file'),
                       trailing: _isExporting
                           ? const SizedBox(
                               width: 24,
@@ -113,7 +147,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ListTile(
                       leading: const Icon(Icons.download_outlined),
                       title: const Text('Import Backup'),
-                      subtitle: const Text('Restore from a previously exported backup file'),
+                      subtitle: const Text(
+                          'Restore from a previously exported backup file'),
                       trailing: _isImporting
                           ? const SizedBox(
                               width: 24,
@@ -127,7 +162,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const Divider(height: 32),
-              const Text('About', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text('About',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               const Card(
                 child: Column(

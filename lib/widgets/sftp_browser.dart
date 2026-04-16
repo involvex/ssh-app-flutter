@@ -18,13 +18,32 @@ class SftpBrowser extends StatefulWidget {
 }
 
 class _SftpBrowserState extends State<SftpBrowser> {
-  String currentPath = '.';
+  String currentPath = '/';
   List<Map<String, dynamic>> entries = [];
   bool loading = true;
+  List<String> availableDrives = [];
 
   @override
   void initState() {
     super.initState();
+    unawaited(_detectDrives());
+  }
+
+  Future<void> _detectDrives() async {
+    final provider = Provider.of<SSHProvider>(context, listen: false);
+    final matches = provider.sessions.where((s) => s.id == widget.sessionId);
+    if (matches.isEmpty) return;
+    final client = matches.first.client;
+    if (client == null) return;
+
+    final helper = SftpHelper(client);
+    final drives = await helper.listDrives();
+    if (!mounted) return;
+
+    setState(() {
+      availableDrives = drives;
+      currentPath = drives.isNotEmpty ? '${drives.first}:/' : '/';
+    });
     unawaited(_refresh());
   }
 
@@ -61,7 +80,8 @@ class _SftpBrowserState extends State<SftpBrowser> {
   Future<void> _download(String remoteFile) async {
     // capture context-dependent values before any awaits to avoid use_build_context_synchronously
     final provider = Provider.of<SSHProvider>(context, listen: false);
-    final active = provider.sessions.firstWhere((s) => s.id == widget.sessionId);
+    final active =
+        provider.sessions.firstWhere((s) => s.id == widget.sessionId);
     final client = active.client!;
     final helper = SftpHelper(client);
 
@@ -69,17 +89,21 @@ class _SftpBrowserState extends State<SftpBrowser> {
     if (picked == null) return;
 
     final local = File('$picked/$remoteFile');
-    final remote = (currentPath == '.' || currentPath == '/') ? remoteFile : '$currentPath/$remoteFile';
+    final remote = (currentPath == '.' || currentPath == '/')
+        ? remoteFile
+        : '$currentPath/$remoteFile';
     await helper.downloadStream(remote, local);
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Downloaded')));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('Downloaded')));
   }
 
   Future<void> _upload() async {
     // Capture all context-dependent values before the first await
     final provider = Provider.of<SSHProvider>(context, listen: false);
-    final active = provider.sessions.firstWhere((s) => s.id == widget.sessionId);
+    final active =
+        provider.sessions.firstWhere((s) => s.id == widget.sessionId);
     final helper = SftpHelper(active.client!);
     final messenger = ScaffoldMessenger.of(context);
 
@@ -87,7 +111,9 @@ class _SftpBrowserState extends State<SftpBrowser> {
     if (result == null) return;
     final path = result.files.single.path!;
     final file = File(path);
-    final remotePath = (currentPath == '.' || currentPath == '/') ? result.files.single.name : '$currentPath/${result.files.single.name}';
+    final remotePath = (currentPath == '.' || currentPath == '/')
+        ? result.files.single.name
+        : '$currentPath/${result.files.single.name}';
     await helper.upload(file, remotePath);
     if (!mounted) return;
     await _refresh();
@@ -104,10 +130,34 @@ class _SftpBrowserState extends State<SftpBrowser> {
           ListTile(
             title: Text('SFTP — $currentPath'),
             trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-              IconButton(onPressed: _upload, icon: const Icon(Icons.upload_file)),
+              IconButton(
+                  onPressed: _upload, icon: const Icon(Icons.upload_file)),
               IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh)),
             ]),
           ),
+          if (availableDrives.isNotEmpty)
+            SizedBox(
+              height: 40,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: availableDrives.length,
+                itemBuilder: (context, idx) {
+                  final drive = availableDrives[idx];
+                  final isSelected = currentPath.startsWith('$drive:');
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: ChoiceChip(
+                      label: Text('$drive:'),
+                      selected: isSelected,
+                      onSelected: (_) async {
+                        setState(() => currentPath = '$drive:/');
+                        await _refresh();
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
           Expanded(
             child: loading
                 ? const Center(child: CircularProgressIndicator())
@@ -119,25 +169,35 @@ class _SftpBrowserState extends State<SftpBrowser> {
                       final isDir = item['isDirectory'] as bool? ?? false;
 
                       return ListTile(
-                        leading: Icon(isDir ? Icons.folder : Icons.insert_drive_file),
+                        leading: Icon(
+                            isDir ? Icons.folder : Icons.insert_drive_file),
                         title: Text(name),
                         onTap: () async {
                           if (name == '..') {
                             final lastSlash = currentPath.lastIndexOf('/');
                             if (lastSlash <= 0) {
-                              setState(() => currentPath = lastSlash == 0 ? '/' : '.');
+                              setState(() =>
+                                  currentPath = lastSlash == 0 ? '/' : '.');
                             } else {
-                              setState(() => currentPath = currentPath.substring(0, lastSlash));
+                              setState(() => currentPath =
+                                  currentPath.substring(0, lastSlash));
                             }
                             await _refresh();
                             return;
                           }
                           if (isDir) {
-                            setState(() => currentPath = (currentPath == '.' || currentPath == '/') ? name : '$currentPath/$name');
+                            setState(() => currentPath =
+                                (currentPath == '.' || currentPath == '/')
+                                    ? name
+                                    : '$currentPath/$name');
                             await _refresh();
                           }
                         },
-                        trailing: isDir ? null : IconButton(icon: const Icon(Icons.download), onPressed: () => _download(name)),
+                        trailing: isDir
+                            ? null
+                            : IconButton(
+                                icon: const Icon(Icons.download),
+                                onPressed: () => _download(name)),
                       );
                     },
                   ),
