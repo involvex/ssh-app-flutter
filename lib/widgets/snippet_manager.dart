@@ -38,7 +38,8 @@ class SnippetManager extends StatelessWidget {
                   children: <Widget>[
                     const Text(
                       'Text Snippets',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     IconButton(
                       icon: const Icon(Icons.add, color: Colors.green),
@@ -72,11 +73,14 @@ class SnippetManager extends StatelessWidget {
                             children: <Widget>[
                               IconButton(
                                 icon: const Icon(Icons.edit, size: 20),
-                                onPressed: () => _showSnippetDialog(context, snippet: snippet),
+                                onPressed: () => _showSnippetDialog(context,
+                                    snippet: snippet),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-                                onPressed: () => provider.deleteSnippet(snippet.id),
+                                icon: const Icon(Icons.delete,
+                                    size: 20, color: Colors.red),
+                                onPressed: () =>
+                                    provider.deleteSnippet(snippet.id),
                               ),
                             ],
                           ),
@@ -96,8 +100,10 @@ class SnippetManager extends StatelessWidget {
 
   void _showSnippetDialog(BuildContext context, {Snippet? snippet}) {
     final nameController = TextEditingController(text: snippet?.name ?? '');
-    final contentController = TextEditingController(text: snippet?.content ?? '');
-    final categoryController = TextEditingController(text: snippet?.category ?? 'General');
+    final contentController =
+        TextEditingController(text: snippet?.content ?? '');
+    final categoryController =
+        TextEditingController(text: snippet?.category ?? 'General');
 
     showDialog<void>(
       context: context,
@@ -134,16 +140,20 @@ class SnippetManager extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                if (nameController.text.isEmpty || contentController.text.isEmpty) {
+                if (nameController.text.isEmpty ||
+                    contentController.text.isEmpty) {
                   return;
                 }
                 final newSnippet = Snippet(
                   id: snippet?.id,
                   name: nameController.text,
                   content: contentController.text,
-                  category: categoryController.text.isNotEmpty ? categoryController.text : 'General',
+                  category: categoryController.text.isNotEmpty
+                      ? categoryController.text
+                      : 'General',
                 );
-                final provider = Provider.of<SnippetProvider>(context, listen: false);
+                final provider =
+                    Provider.of<SnippetProvider>(context, listen: false);
                 if (snippet == null) {
                   provider.addSnippet(newSnippet);
                 } else {

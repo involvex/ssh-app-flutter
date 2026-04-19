@@ -16,7 +16,8 @@ class BackupService {
       'sshKeys': await ConfigService.getSSHKeys(),
       'snippets': await ConfigService.getSnippets(),
       'settings': await ConfigService.getSettings(),
-      'lastSession': await ConfigService.getLastSession(),  // nullable; serialized as null if absent
+      'lastSession': await ConfigService
+          .getLastSession(), // nullable; serialized as null if absent
     };
 
     final jsonString = const JsonEncoder.withIndent('  ').convert(data);

@@ -28,7 +28,8 @@ class _SnippetConfigScreenState extends State<SnippetConfigScreen> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: SearchBar(
               controller: _searchController,
               hintText: 'Search snippets...',
@@ -74,7 +75,9 @@ class _SnippetConfigScreenState extends State<SnippetConfigScreen> {
                   Icon(Icons.code_off, size: 64, color: Colors.grey[600]),
                   const SizedBox(height: 16),
                   Text(
-                    _searchQuery.isEmpty ? 'No snippets yet' : 'No matches found',
+                    _searchQuery.isEmpty
+                        ? 'No snippets yet'
+                        : 'No matches found',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   if (_searchQuery.isEmpty)
@@ -100,10 +103,12 @@ class _SnippetConfigScreenState extends State<SnippetConfigScreen> {
                 margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                    backgroundColor:
+                        Theme.of(context).colorScheme.secondaryContainer,
                     child: const Icon(Icons.terminal, size: 20),
                   ),
-                  title: Text(snippet.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  title: Text(snippet.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -111,20 +116,25 @@ class _SnippetConfigScreenState extends State<SnippetConfigScreen> {
                         snippet.content,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                        style: const TextStyle(
+                            fontFamily: 'monospace', fontSize: 12),
                       ),
                       const SizedBox(height: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           snippet.category,
                           style: TextStyle(
                             fontSize: 10,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ),
@@ -135,11 +145,14 @@ class _SnippetConfigScreenState extends State<SnippetConfigScreen> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.edit_outlined),
-                        onPressed: () => _showSnippetDialog(context, snippet: snippet),
+                        onPressed: () =>
+                            _showSnippetDialog(context, snippet: snippet),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete_outline, color: Colors.red),
-                        onPressed: () => _confirmDelete(context, provider, snippet),
+                        icon:
+                            const Icon(Icons.delete_outline, color: Colors.red),
+                        onPressed: () =>
+                            _confirmDelete(context, provider, snippet),
                       ),
                     ],
                   ),
@@ -157,7 +170,8 @@ class _SnippetConfigScreenState extends State<SnippetConfigScreen> {
     );
   }
 
-  void _confirmDelete(BuildContext context, SnippetProvider provider, Snippet snippet) {
+  void _confirmDelete(
+      BuildContext context, SnippetProvider provider, Snippet snippet) {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
@@ -182,8 +196,10 @@ class _SnippetConfigScreenState extends State<SnippetConfigScreen> {
 
   void _showSnippetDialog(BuildContext context, {Snippet? snippet}) {
     final nameController = TextEditingController(text: snippet?.name ?? '');
-    final contentController = TextEditingController(text: snippet?.content ?? '');
-    final categoryController = TextEditingController(text: snippet?.category ?? 'General');
+    final contentController =
+        TextEditingController(text: snippet?.content ?? '');
+    final categoryController =
+        TextEditingController(text: snippet?.category ?? 'General');
 
     showModalBottomSheet<void>(
       context: context,
@@ -244,16 +260,20 @@ class _SnippetConfigScreenState extends State<SnippetConfigScreen> {
                   const SizedBox(width: 8),
                   FilledButton(
                     onPressed: () {
-                      if (nameController.text.isEmpty || contentController.text.isEmpty) {
+                      if (nameController.text.isEmpty ||
+                          contentController.text.isEmpty) {
                         return;
                       }
                       final newSnippet = Snippet(
                         id: snippet?.id,
                         name: nameController.text,
                         content: contentController.text,
-                        category: categoryController.text.isNotEmpty ? categoryController.text : 'General',
+                        category: categoryController.text.isNotEmpty
+                            ? categoryController.text
+                            : 'General',
                       );
-                      final provider = Provider.of<SnippetProvider>(context, listen: false);
+                      final provider =
+                          Provider.of<SnippetProvider>(context, listen: false);
                       if (snippet == null) {
                         provider.addSnippet(newSnippet);
                       } else {

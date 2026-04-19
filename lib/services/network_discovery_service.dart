@@ -45,7 +45,8 @@ class NetworkDiscoveryService {
     return results.whereType<String>().toList();
   }
 
-  static Future<String?> _checkPort(String host, int port, int timeoutMs) async {
+  static Future<String?> _checkPort(
+      String host, int port, int timeoutMs) async {
     try {
       final socket = await Socket.connect(
         host,
@@ -59,7 +60,8 @@ class NetworkDiscoveryService {
     }
   }
 
-  static Future<bool> checkPortOpen(String host, int port, {int timeoutMs = 2000}) async {
+  static Future<bool> checkPortOpen(String host, int port,
+      {int timeoutMs = 2000}) async {
     try {
       final socket = await Socket.connect(
         host,

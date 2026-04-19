@@ -70,7 +70,8 @@ class _NetworkDiscoverySheetState extends State<NetworkDiscoverySheet> {
                   children: <Widget>[
                     const Text(
                       'Network Discovery',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     if (_localIP != null) ...<Widget>[
                       const SizedBox(height: 8),
@@ -115,15 +116,18 @@ class _NetworkDiscoverySheetState extends State<NetworkDiscoverySheet> {
                     return Row(
                       children: <Widget>[
                         ElevatedButton.icon(
-                          onPressed: ssh.isScanning ? null : () => _scanNetwork(ssh),
+                          onPressed:
+                              ssh.isScanning ? null : () => _scanNetwork(ssh),
                           icon: ssh.isScanning
                               ? const SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : const Icon(Icons.search),
-                          label: Text(ssh.isScanning ? 'Scanning...' : 'Auto Scan'),
+                          label: Text(
+                              ssh.isScanning ? 'Scanning...' : 'Auto Scan'),
                         ),
                         const SizedBox(width: 16),
                         Text(
@@ -156,7 +160,8 @@ class _NetworkDiscoverySheetState extends State<NetworkDiscoverySheet> {
                       itemBuilder: (context, index) {
                         final host = ssh.discoveredHosts[index];
                         return ListTile(
-                          leading: const Icon(Icons.computer, color: Colors.green),
+                          leading:
+                              const Icon(Icons.computer, color: Colors.green),
                           title: Text(host),
                           subtitle: const Text('Port 22 (SSH)'),
                           trailing: IconButton(

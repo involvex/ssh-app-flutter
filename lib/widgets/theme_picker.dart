@@ -59,11 +59,16 @@ class ThemePicker extends StatelessWidget {
                 spacing: 12,
                 runSpacing: 12,
                 children: [
-                  _ColorOption(color: Colors.blue, current: settings.accentColor),
-                  _ColorOption(color: Colors.green, current: settings.accentColor),
-                  _ColorOption(color: Colors.purple, current: settings.accentColor),
-                  _ColorOption(color: Colors.orange, current: settings.accentColor),
-                  _ColorOption(color: Colors.red, current: settings.accentColor),
+                  _ColorOption(
+                      color: Colors.blue, current: settings.accentColor),
+                  _ColorOption(
+                      color: Colors.green, current: settings.accentColor),
+                  _ColorOption(
+                      color: Colors.purple, current: settings.accentColor),
+                  _ColorOption(
+                      color: Colors.orange, current: settings.accentColor),
+                  _ColorOption(
+                      color: Colors.red, current: settings.accentColor),
                 ],
               ),
             ],
@@ -95,10 +100,17 @@ class _ColorOption extends StatelessWidget {
           shape: BoxShape.circle,
           border: isSelected ? Border.all(color: Colors.white, width: 3) : null,
           boxShadow: isSelected
-              ? [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 8, spreadRadius: 2)]
+              ? [
+                  BoxShadow(
+                      color: color.withValues(alpha: 0.5),
+                      blurRadius: 8,
+                      spreadRadius: 2)
+                ]
               : null,
         ),
-        child: isSelected ? const Icon(Icons.check, color: Colors.white, size: 20) : null,
+        child: isSelected
+            ? const Icon(Icons.check, color: Colors.white, size: 20)
+            : null,
       ),
     );
   }

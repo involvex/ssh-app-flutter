@@ -16,7 +16,9 @@ class LogViewer extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Connection Logs', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Connection Logs',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   IconButton(
                     icon: const Icon(Icons.delete),
                     onPressed: () => ssh.connectionLog.clear(),
@@ -34,7 +36,8 @@ class LogViewer extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 2.0),
                     child: Text(
                       ssh.connectionLog.reversed.toList()[index],
-                      style: const TextStyle(fontFamily: 'Courier New', fontSize: 12),
+                      style: const TextStyle(
+                          fontFamily: 'Courier New', fontSize: 12),
                     ),
                   );
                 },

@@ -37,7 +37,8 @@ class ProfileManager extends StatelessWidget {
                   children: <Widget>[
                     const Text(
                       'SSH Profiles',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     IconButton(
                       icon: const Icon(Icons.add, color: Colors.green),
@@ -71,11 +72,14 @@ class ProfileManager extends StatelessWidget {
                             children: <Widget>[
                               IconButton(
                                 icon: const Icon(Icons.edit, size: 20),
-                                onPressed: () => _showProfileDialog(context, profile: profile),
+                                onPressed: () => _showProfileDialog(context,
+                                    profile: profile),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-                                onPressed: () => _deleteProfile(context, profile.id),
+                                icon: const Icon(Icons.delete,
+                                    size: 20, color: Colors.red),
+                                onPressed: () =>
+                                    _deleteProfile(context, profile.id),
                               ),
                             ],
                           ),
@@ -96,10 +100,14 @@ class ProfileManager extends StatelessWidget {
   void _showProfileDialog(BuildContext context, {SSHProfile? profile}) {
     final nameController = TextEditingController(text: profile?.name ?? '');
     final hostController = TextEditingController(text: profile?.host ?? '');
-    final portController = TextEditingController(text: profile?.port.toString() ?? '22');
-    final usernameController = TextEditingController(text: profile?.username ?? '');
-    final passwordController = TextEditingController(text: profile?.password ?? '');
-    final startupCommandController = TextEditingController(text: profile?.startupCommand ?? '');
+    final portController =
+        TextEditingController(text: profile?.port.toString() ?? '22');
+    final usernameController =
+        TextEditingController(text: profile?.username ?? '');
+    final passwordController =
+        TextEditingController(text: profile?.password ?? '');
+    final startupCommandController =
+        TextEditingController(text: profile?.startupCommand ?? '');
     final isServer = profile?.isServer ?? false;
 
     showDialog<void>(
@@ -162,7 +170,8 @@ class ProfileManager extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                if (nameController.text.isEmpty || hostController.text.isEmpty) {
+                if (nameController.text.isEmpty ||
+                    hostController.text.isEmpty) {
                   return;
                 }
                 final newProfile = SSHProfile(
@@ -173,9 +182,12 @@ class ProfileManager extends StatelessWidget {
                   username: usernameController.text,
                   password: passwordController.text,
                   isServer: isServer,
-                  startupCommand: startupCommandController.text.isNotEmpty ? startupCommandController.text : null,
+                  startupCommand: startupCommandController.text.isNotEmpty
+                      ? startupCommandController.text
+                      : null,
                 );
-                Provider.of<SSHProvider>(context, listen: false).saveProfile(newProfile);
+                Provider.of<SSHProvider>(context, listen: false)
+                    .saveProfile(newProfile);
                 Navigator.pop(dialogContext);
               },
               child: const Text('Save'),
@@ -202,7 +214,8 @@ class ProfileManager extends StatelessWidget {
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               onPressed: () {
-                Provider.of<SSHProvider>(context, listen: false).deleteProfile(id);
+                Provider.of<SSHProvider>(context, listen: false)
+                    .deleteProfile(id);
                 Navigator.pop(dialogContext);
               },
               child: const Text('Delete'),
@@ -231,7 +244,9 @@ class ProfileManager extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Connection failed: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Connection failed: $e'),
+              backgroundColor: Colors.red),
         );
       }
     }

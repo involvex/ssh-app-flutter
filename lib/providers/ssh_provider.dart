@@ -155,7 +155,8 @@ class SSHProvider extends ChangeNotifier {
         if (isGit) {
           final escaped = startupCommand.replaceAll("'", "''");
           const gitFullPath = r'C:\Program Files\Git\cmd\git.exe';
-          final psCmd = "powershell -NoProfile -Command \"& '$gitFullPath' $escaped\"";
+          final psCmd =
+              "powershell -NoProfile -Command \"& '$gitFullPath' $escaped\"";
           try {
             shell.stdin.add(utf8.encode('$psCmd\r'));
             addLog('Executed startup command via PowerShell wrapper: $psCmd');
@@ -177,7 +178,8 @@ class SSHProvider extends ChangeNotifier {
   }
 
   Future<void> disconnectSession(String sessionId) async {
-    final entry = sessions.firstWhere((s) => s.id == sessionId, orElse: () => throw StateError('Session not found'));
+    final entry = sessions.firstWhere((s) => s.id == sessionId,
+        orElse: () => throw StateError('Session not found'));
     entry.shellSession?.close();
     entry.client?.close();
     entry.isConnected = false;
@@ -204,7 +206,13 @@ class SSHProvider extends ChangeNotifier {
     String? startupCommand,
   }) async {
     // Backwards-compatible wrapper: create a temp profile and session
-    final profile = SSHProfile(name: 'Last Session', host: host, port: port, username: username, password: password, startupCommand: startupCommand);
+    final profile = SSHProfile(
+        name: 'Last Session',
+        host: host,
+        port: port,
+        username: username,
+        password: password,
+        startupCommand: startupCommand);
     final entry = createSessionFromProfile(profile);
     await connectSession(entry.id);
   }

@@ -12,7 +12,10 @@ class SSHProfile {
   final String? startupCommand;
 
   SSHProfile({
-    required this.name, required this.host, required this.username, String? id,
+    required this.name,
+    required this.host,
+    required this.username,
+    String? id,
     this.port = 22,
     this.password,
     this.privateKey,

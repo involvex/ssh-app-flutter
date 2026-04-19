@@ -32,7 +32,7 @@ class _ShortcutEditorState extends State<ShortcutEditor> {
       if (newIndex > oldIndex) newIndex--;
       final item = rowShortcuts.removeAt(oldIndex);
       rowShortcuts.insert(newIndex, item);
-      
+
       for (int i = 0; i < rowShortcuts.length; i++) {
         final idx = _shortcuts.indexWhere((s) => s.id == rowShortcuts[i].id);
         if (idx >= 0) _shortcuts[idx] = rowShortcuts[i];
@@ -86,7 +86,8 @@ class _ShortcutEditorState extends State<ShortcutEditor> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Configure Shortcuts', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const Text('Configure Shortcuts',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               TextButton.icon(
                 onPressed: _reset,
                 icon: const Icon(Icons.restore),
@@ -97,7 +98,8 @@ class _ShortcutEditorState extends State<ShortcutEditor> {
           const SizedBox(height: 16),
           Row(
             children: [
-              const Text('Row: ', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Row: ',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(width: 8),
               SegmentedButton<int>(
                 segments: const [
@@ -124,8 +126,11 @@ class _ShortcutEditorState extends State<ShortcutEditor> {
                   onDelete: () => _removeShortcut(shortcut),
                   onLabelChanged: (label) {
                     setState(() {
-                      final idx = _shortcuts.indexWhere((s) => s.id == shortcut.id);
-                      if (idx >= 0) _shortcuts[idx] = shortcut.copyWith(label: label);
+                      final idx =
+                          _shortcuts.indexWhere((s) => s.id == shortcut.id);
+                      if (idx >= 0) {
+                        _shortcuts[idx] = shortcut.copyWith(label: label);
+                      }
                     });
                   },
                 );

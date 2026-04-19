@@ -19,7 +19,7 @@ class _SSHServerFormState extends State<SSHServerForm> {
   @override
   Widget build(BuildContext context) {
     final ssh = Provider.of<SSHProvider>(context, listen: false);
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Form(
@@ -27,24 +27,28 @@ class _SSHServerFormState extends State<SSHServerForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('SSH Server Configuration', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text('SSH Server Configuration',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
             TextFormField(
               controller: _portController,
-              decoration: const InputDecoration(labelText: 'Port', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                  labelText: 'Port', border: OutlineInputBorder()),
               keyboardType: TextInputType.number,
               validator: (value) => value!.isEmpty ? 'Required' : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _usernameController,
-              decoration: const InputDecoration(labelText: 'Username', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                  labelText: 'Username', border: OutlineInputBorder()),
               validator: (value) => value!.isEmpty ? 'Required' : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                  labelText: 'Password', border: OutlineInputBorder()),
               obscureText: true,
               validator: (value) => value!.isEmpty ? 'Required' : null,
             ),
@@ -52,9 +56,9 @@ class _SSHServerFormState extends State<SSHServerForm> {
             ElevatedButton(
               onPressed: _isLoading ? null : () => _startServer(ssh),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              child: _isLoading 
-                ? const CircularProgressIndicator(color: Colors.white) 
-                : const Text('Start Server'),
+              child: _isLoading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text('Start Server'),
             ),
           ],
         ),

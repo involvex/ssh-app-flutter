@@ -37,7 +37,9 @@ class CtrlButtonPanel extends StatelessWidget {
               _NavButton(
                 label: 'Tab',
                 onTap: () {
-                  final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
+                  final active =
+                      Provider.of<SSHProvider>(context, listen: false)
+                          .activeSession;
                   if (active != null) {
                     active.terminal.keyInput(TerminalKey.tab);
                   }
@@ -46,7 +48,9 @@ class CtrlButtonPanel extends StatelessWidget {
               _NavButton(
                 label: '←',
                 onTap: () {
-                  final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
+                  final active =
+                      Provider.of<SSHProvider>(context, listen: false)
+                          .activeSession;
                   if (active != null) {
                     active.terminal.keyInput(TerminalKey.arrowLeft);
                   }
@@ -55,7 +59,9 @@ class CtrlButtonPanel extends StatelessWidget {
               _NavButton(
                 label: '→',
                 onTap: () {
-                  final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
+                  final active =
+                      Provider.of<SSHProvider>(context, listen: false)
+                          .activeSession;
                   if (active != null) {
                     active.terminal.keyInput(TerminalKey.arrowRight);
                   }
@@ -64,7 +70,9 @@ class CtrlButtonPanel extends StatelessWidget {
               _NavButton(
                 label: '↑',
                 onTap: () {
-                  final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
+                  final active =
+                      Provider.of<SSHProvider>(context, listen: false)
+                          .activeSession;
                   if (active != null) {
                     active.terminal.keyInput(TerminalKey.arrowUp);
                   }
@@ -73,7 +81,9 @@ class CtrlButtonPanel extends StatelessWidget {
               _NavButton(
                 label: '↓',
                 onTap: () {
-                  final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
+                  final active =
+                      Provider.of<SSHProvider>(context, listen: false)
+                          .activeSession;
                   if (active != null) {
                     active.terminal.keyInput(TerminalKey.arrowDown);
                   }
@@ -82,7 +92,9 @@ class CtrlButtonPanel extends StatelessWidget {
               _NavButton(
                 label: 'Home',
                 onTap: () {
-                  final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
+                  final active =
+                      Provider.of<SSHProvider>(context, listen: false)
+                          .activeSession;
                   if (active != null) {
                     active.terminal.keyInput(TerminalKey.home);
                   }
@@ -91,7 +103,9 @@ class CtrlButtonPanel extends StatelessWidget {
               _NavButton(
                 label: 'End',
                 onTap: () {
-                  final active = Provider.of<SSHProvider>(context, listen: false).activeSession;
+                  final active =
+                      Provider.of<SSHProvider>(context, listen: false)
+                          .activeSession;
                   if (active != null) {
                     active.terminal.keyInput(TerminalKey.end);
                   }

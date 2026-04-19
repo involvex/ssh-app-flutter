@@ -15,7 +15,8 @@ class KeyboardShortcutBar extends StatelessWidget {
   final int? showRow;
   final bool forceShowOnMobile;
 
-  const KeyboardShortcutBar({super.key, this.showRow, this.forceShowOnMobile = false});
+  const KeyboardShortcutBar(
+      {super.key, this.showRow, this.forceShowOnMobile = false});
 
   @override
   Widget build(BuildContext context) {
@@ -178,27 +179,27 @@ class _ShortcutChip extends StatelessWidget {
         break;
       case ShortcutAction.arrowUp:
         if (isConnected) {
-              final active = ssh.activeSession;
-              if (active != null) active.terminal.keyInput(TerminalKey.arrowUp);
-            }
+          final active = ssh.activeSession;
+          if (active != null) active.terminal.keyInput(TerminalKey.arrowUp);
+        }
         break;
       case ShortcutAction.arrowDown:
         if (isConnected) {
-              final active = ssh.activeSession;
-              if (active != null) active.terminal.keyInput(TerminalKey.arrowDown);
-            }
+          final active = ssh.activeSession;
+          if (active != null) active.terminal.keyInput(TerminalKey.arrowDown);
+        }
         break;
       case ShortcutAction.arrowRight:
         if (isConnected) {
-              final active = ssh.activeSession;
-              if (active != null) active.terminal.keyInput(TerminalKey.arrowRight);
-            }
+          final active = ssh.activeSession;
+          if (active != null) active.terminal.keyInput(TerminalKey.arrowRight);
+        }
         break;
       case ShortcutAction.arrowLeft:
         if (isConnected) {
-              final active = ssh.activeSession;
-              if (active != null) active.terminal.keyInput(TerminalKey.arrowLeft);
-            }
+          final active = ssh.activeSession;
+          if (active != null) active.terminal.keyInput(TerminalKey.arrowLeft);
+        }
         break;
       case ShortcutAction.home:
         if (isConnected) {
@@ -216,7 +217,7 @@ class _ShortcutChip extends StatelessWidget {
           }
         }
         break;
-      }
+    }
   }
 
   void _showConnectionModal(BuildContext context) {

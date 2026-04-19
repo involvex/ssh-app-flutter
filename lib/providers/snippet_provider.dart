@@ -22,7 +22,9 @@ class SnippetProvider extends ChangeNotifier {
   Future<void> loadSnippets() async {
     final data = await ConfigService.getSnippets();
     if (data.isNotEmpty) {
-      _snippets = data.map((e) => Snippet.fromJson(Map<String, dynamic>.from(e as Map))).toList();
+      _snippets = data
+          .map((e) => Snippet.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
     } else {
       _snippets = Snippet.defaults;
     }

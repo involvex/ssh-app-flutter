@@ -53,10 +53,10 @@ class ConfigService {
   }
 
   static Map<String, dynamic> get _defaultSettings => {
-    'autoDiscovery': false,
-    'keyboardShortcuts': <String, String>{},
-    'theme': 'dark',
-  };
+        'autoDiscovery': false,
+        'keyboardShortcuts': <String, String>{},
+        'theme': 'dark',
+      };
 
   static Future<List<Map<String, dynamic>>> getSSHKeys() async {
     final String? data = prefs.getString(_sshKeysKey);

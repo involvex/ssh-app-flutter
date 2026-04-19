@@ -55,7 +55,9 @@ class _ConnectionModalState extends State<ConnectionModal> {
       username: _usernameController.text,
       password: _passwordController.text,
       isServer: _isServer,
-      startupCommand: _startupCommandController.text.isNotEmpty ? _startupCommandController.text : null,
+      startupCommand: _startupCommandController.text.isNotEmpty
+          ? _startupCommandController.text
+          : null,
     );
 
     await ssh.saveLastSession(profile);

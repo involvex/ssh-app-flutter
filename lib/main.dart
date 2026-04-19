@@ -20,8 +20,10 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => SSHProvider()),
-        ChangeNotifierProvider(create: (context) => SettingsProvider()..loadSettings()),
-        ChangeNotifierProvider(create: (context) => SnippetProvider()..loadSnippets()),
+        ChangeNotifierProvider(
+            create: (context) => SettingsProvider()..loadSettings()),
+        ChangeNotifierProvider(
+            create: (context) => SnippetProvider()..loadSnippets()),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, child) {
@@ -88,7 +90,8 @@ class MyApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             themeMode: settings.themeMode,
             theme: lightTheme,
-            darkTheme: settings.appTheme == AppTheme.hacker ? hackerTheme : darkTheme,
+            darkTheme:
+                settings.appTheme == AppTheme.hacker ? hackerTheme : darkTheme,
             home: const SplashScreen(),
           );
         },

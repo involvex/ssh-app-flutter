@@ -394,6 +394,7 @@ class ClientTab extends StatelessWidget {
                   color: terminalTheme.background,
                   child: TerminalView(
                     active.terminal,
+                    controller: active.terminalController,
                     padding: const EdgeInsets.all(8),
                     theme: terminalTheme,
                     textStyle: TerminalStyle(

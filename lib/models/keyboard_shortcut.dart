@@ -123,20 +123,85 @@ class KeyboardShortcut {
   }
 
   static List<KeyboardShortcut> get defaults => [
-    KeyboardShortcut(label: 'Ctrl+N', description: 'New Connection', action: ShortcutAction.newConnection, row: 0),
-    KeyboardShortcut(label: 'Ctrl+P', description: 'Profiles', action: ShortcutAction.profiles, row: 0),
-    KeyboardShortcut(label: 'Ctrl+D', description: 'Discovery', action: ShortcutAction.discovery, row: 0),
-    KeyboardShortcut(label: 'Ctrl+K', description: 'Keys', action: ShortcutAction.keys, row: 0),
-    KeyboardShortcut(label: 'Tab', description: 'Tab', action: ShortcutAction.tabChar, charCode: 9, row: 1),
-    KeyboardShortcut(label: '←', description: 'Arrow Left', action: ShortcutAction.arrowLeft, row: 1),
-    KeyboardShortcut(label: '→', description: 'Arrow Right', action: ShortcutAction.arrowRight, row: 1),
-    KeyboardShortcut(label: '↑', description: 'Arrow Up', action: ShortcutAction.arrowUp, row: 1),
-    KeyboardShortcut(label: '↓', description: 'Arrow Down', action: ShortcutAction.arrowDown, row: 1),
-    KeyboardShortcut(label: 'Home', description: 'Home', action: ShortcutAction.home, row: 1),
-    KeyboardShortcut(label: 'End', description: 'End', action: ShortcutAction.end, row: 1),
-    KeyboardShortcut(label: 'Ctrl+C', description: 'Interrupt', action: ShortcutAction.ctrlC, charCode: 3, row: 2),
-    KeyboardShortcut(label: 'Ctrl+D', description: 'EOF', action: ShortcutAction.ctrlD, charCode: 4, row: 2),
-    KeyboardShortcut(label: 'Ctrl+Z', description: 'Suspend', action: ShortcutAction.ctrlZ, charCode: 26, row: 2),
-    KeyboardShortcut(label: 'Ctrl+L', description: 'Clear', action: ShortcutAction.ctrlL, charCode: 12, row: 2),
-  ];
+        KeyboardShortcut(
+            label: 'Ctrl+N',
+            description: 'New Connection',
+            action: ShortcutAction.newConnection,
+            row: 0),
+        KeyboardShortcut(
+            label: 'Ctrl+P',
+            description: 'Profiles',
+            action: ShortcutAction.profiles,
+            row: 0),
+        KeyboardShortcut(
+            label: 'Ctrl+D',
+            description: 'Discovery',
+            action: ShortcutAction.discovery,
+            row: 0),
+        KeyboardShortcut(
+            label: 'Ctrl+K',
+            description: 'Keys',
+            action: ShortcutAction.keys,
+            row: 0),
+        KeyboardShortcut(
+            label: 'Tab',
+            description: 'Tab',
+            action: ShortcutAction.tabChar,
+            charCode: 9,
+            row: 1),
+        KeyboardShortcut(
+            label: '←',
+            description: 'Arrow Left',
+            action: ShortcutAction.arrowLeft,
+            row: 1),
+        KeyboardShortcut(
+            label: '→',
+            description: 'Arrow Right',
+            action: ShortcutAction.arrowRight,
+            row: 1),
+        KeyboardShortcut(
+            label: '↑',
+            description: 'Arrow Up',
+            action: ShortcutAction.arrowUp,
+            row: 1),
+        KeyboardShortcut(
+            label: '↓',
+            description: 'Arrow Down',
+            action: ShortcutAction.arrowDown,
+            row: 1),
+        KeyboardShortcut(
+            label: 'Home',
+            description: 'Home',
+            action: ShortcutAction.home,
+            row: 1),
+        KeyboardShortcut(
+            label: 'End',
+            description: 'End',
+            action: ShortcutAction.end,
+            row: 1),
+        KeyboardShortcut(
+            label: 'Ctrl+C',
+            description: 'Interrupt',
+            action: ShortcutAction.ctrlC,
+            charCode: 3,
+            row: 2),
+        KeyboardShortcut(
+            label: 'Ctrl+D',
+            description: 'EOF',
+            action: ShortcutAction.ctrlD,
+            charCode: 4,
+            row: 2),
+        KeyboardShortcut(
+            label: 'Ctrl+Z',
+            description: 'Suspend',
+            action: ShortcutAction.ctrlZ,
+            charCode: 26,
+            row: 2),
+        KeyboardShortcut(
+            label: 'Ctrl+L',
+            description: 'Clear',
+            action: ShortcutAction.ctrlL,
+            charCode: 12,
+            row: 2),
+      ];
 }

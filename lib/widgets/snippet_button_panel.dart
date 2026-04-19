@@ -21,7 +21,10 @@ class SnippetButtonPanel extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(128),
+            color: Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest
+                .withAlpha(128),
             borderRadius: BorderRadius.circular(16),
           ),
           child: SingleChildScrollView(
@@ -32,25 +35,28 @@ class SnippetButtonPanel extends StatelessWidget {
                 const Icon(Icons.code, size: 18, color: Colors.grey),
                 const SizedBox(width: 8),
                 ...displaySnippets.map((s) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: ActionChip(
-                    label: Text(
-                      s.name,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    padding: EdgeInsets.zero,
-                    onPressed: () {
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: ActionChip(
+                        label: Text(
+                          s.name,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        padding: EdgeInsets.zero,
+                        onPressed: () {
                           final active = ssh.activeSession;
                           if (active != null && active.isConnected) {
-                          active.terminal.write('${s.content}\n');
-                        }
+                            active.terminal.write('${s.content}\n');
+                          }
                         },
-                        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-                    labelStyle: TextStyle(
-                      color: Theme.of(context).colorScheme.onSecondaryContainer,
-                    ),
-                  ),
-                )),
+                        backgroundColor:
+                            Theme.of(context).colorScheme.secondaryContainer,
+                        labelStyle: TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSecondaryContainer,
+                        ),
+                      ),
+                    )),
                 IconButton(
                   icon: const Icon(Icons.more_horiz, size: 20),
                   onPressed: () => _showSnippetSelection(context),
@@ -112,7 +118,8 @@ class _SnippetSelectionSheet extends StatelessWidget {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SnippetConfigScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => const SnippetConfigScreen()),
                       );
                     },
                     icon: const Icon(Icons.edit),

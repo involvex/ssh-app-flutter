@@ -120,13 +120,15 @@ class _KeyManagerState extends State<KeyManager> {
                 const SizedBox(height: 8),
                 Text('Created: ${key.createdAt.toLocal()}'),
                 const SizedBox(height: 16),
-                const Text('Public Key:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Public Key:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
                 SelectableText(
                   key.publicKey,
                   style: const TextStyle(fontSize: 10, fontFamily: 'monospace'),
                 ),
                 const SizedBox(height: 16),
-                const Text('Private Key:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Private Key:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
                 SelectableText(
                   key.privateKey,
                   style: const TextStyle(fontSize: 10, fontFamily: 'monospace'),
@@ -206,7 +208,8 @@ class _KeyManagerState extends State<KeyManager> {
                   children: <Widget>[
                     const Text(
                       'SSH Keys',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     IconButton(
                       icon: _isLoading
@@ -241,7 +244,8 @@ class _KeyManagerState extends State<KeyManager> {
                                   onPressed: () => _showKeyDetails(key),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                                  icon: const Icon(Icons.delete,
+                                      size: 20, color: Colors.red),
                                   onPressed: () => _deleteKey(key.id),
                                 ),
                               ],

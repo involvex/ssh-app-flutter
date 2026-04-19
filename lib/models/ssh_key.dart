@@ -69,13 +69,18 @@ class SSHKey {
   final DateTime createdAt;
 
   SSHKey({
-    required this.name, required this.keyType, required this.publicKey, required this.privateKey, String? id,
+    required this.name,
+    required this.keyType,
+    required this.publicKey,
+    required this.privateKey,
+    String? id,
     DateTime? createdAt,
     this.passphrase,
   })  : id = id ?? const Uuid().v4(),
         createdAt = createdAt ?? DateTime.now();
 
-  SSHKey.name(this.name, this.keyType, this.publicKey, this.privateKey, {this.passphrase, DateTime? createdAt, String? id}) 
+  SSHKey.name(this.name, this.keyType, this.publicKey, this.privateKey,
+      {this.passphrase, DateTime? createdAt, String? id})
       : id = id ?? const Uuid().v4(),
         createdAt = createdAt ?? DateTime.now();
 

@@ -13,17 +13,20 @@ class SSHKeyGenerator {
       case SSHKeyType.rsa2048:
       case SSHKeyType.rsa4096:
         privateKey = _generateRSAKey(keyType, random);
-        publicKey = 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQ${_generateRandomBase64(random, 200)}';
+        publicKey =
+            'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQ${_generateRandomBase64(random, 200)}';
         break;
       case SSHKeyType.ed25519:
         privateKey = _generateEd25519Key(random);
-        publicKey = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI${_generateRandomBase64(random, 40)}';
+        publicKey =
+            'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI${_generateRandomBase64(random, 40)}';
         break;
       case SSHKeyType.ecdsa256:
       case SSHKeyType.ecdsa384:
       case SSHKeyType.ecdsa521:
         privateKey = _generateECKey(keyType, random);
-        publicKey = 'ecdsa-sha2-nistp${keyType.bitSize} AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTY=${_generateRandomBase64(random, 40)}';
+        publicKey =
+            'ecdsa-sha2-nistp${keyType.bitSize} AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTY=${_generateRandomBase64(random, 40)}';
         break;
     }
 
@@ -37,7 +40,8 @@ class SSHKeyGenerator {
 
   static String _generateRSAKey(SSHKeyType type, Random random) {
     final bitSize = type == SSHKeyType.rsa2048 ? 2048 : 4096;
-    final keyBytes = List<int>.generate(bitSize ~/ 8, (_) => random.nextInt(256));
+    final keyBytes =
+        List<int>.generate(bitSize ~/ 8, (_) => random.nextInt(256));
     final encoded = base64Encode(keyBytes);
     return '-----BEGIN RSA PRIVATE KEY-----\n${_wrapBase64(encoded)}\n-----END RSA PRIVATE KEY-----';
   }
