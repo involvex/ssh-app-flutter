@@ -13,7 +13,6 @@ class SessionEntry {
   SSHClient? client;
   SSHSession? shellSession;
   Terminal terminal;
-  TerminalController terminalController;
   bool isConnected;
 
   SessionEntry({
@@ -21,10 +20,8 @@ class SessionEntry {
     required this.profile,
     String? id,
     Terminal? terminal,
-    TerminalController? terminalController,
   })  : id = id ?? const Uuid().v4(),
         terminal = terminal ?? Terminal(),
-        terminalController = terminalController ?? TerminalController(),
         isConnected = false;
 
   void disposeRuntime() {
