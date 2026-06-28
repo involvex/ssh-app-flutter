@@ -5,6 +5,7 @@ import '../services/backup_service.dart';
 import '../widgets/theme_picker.dart';
 import '../widgets/shortcut_editor.dart';
 import '../widgets/keyboard_shortcut_bar.dart';
+import '../widgets/terminal_font_settings.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -16,6 +17,23 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _isExporting = false;
   bool _isImporting = false;
+  late final TextEditingController _agentPortController;
+
+  @override
+  void initState() {
+    super.initState();
+    final settings =
+        Provider.of<SettingsProvider>(context, listen: false);
+    _agentPortController = TextEditingController(
+      text: settings.defaultAgentPort.toString(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _agentPortController.dispose();
+    super.dispose();
+  }
 
   Future<void> _handleExport() async {
     setState(() => _isExporting = true);
@@ -77,33 +95,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 16),
               const ThemePicker(),
               const Divider(height: 32),
-              const Text('Terminal',
+              const Text('Features',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Font Size'),
-                          Text('${settings.terminalFontSize.toInt()}'),
-                        ],
+                child: Column(
+                  children: [
+                    SwitchListTile(
+                      title: const Text('Show Server tab'),
+                      subtitle: const Text(
+                          'Display the local SSH server tab in navigation'),
+                      value: settings.showServerTab,
+                      onChanged: settings.setShowServerTab,
+                    ),
+                    const Divider(height: 1, indent: 16),
+                    ListTile(
+                      title: const Text('Default Agent Port'),
+                      subtitle: Text('${settings.defaultAgentPort}'),
+                      trailing: SizedBox(
+                        width: 120,
+                        child: TextField(
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            border: OutlineInputBorder(),
+                          ),
+                          controller: _agentPortController,
+                          onSubmitted: (value) {
+                            final port = int.tryParse(value);
+                            if (port != null && port > 0 && port <= 65535) {
+                              settings.setDefaultAgentPort(port);
+                            }
+                          },
+                        ),
                       ),
-                      Slider(
-                        value: settings.terminalFontSize,
-                        min: 6,
-                        max: 24,
-                        divisions: 16,
-                        onChanged: (val) => settings.setTerminalFontSize(val),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
+              const Divider(height: 32),
+              const Text('Terminal',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              const TerminalFontSettings(),
               const Divider(height: 32),
               const Text('Keyboard Shortcuts',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),

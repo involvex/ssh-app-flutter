@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'services/config_service.dart';
 import 'providers/ssh_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/snippet_provider.dart';
+import 'providers/agent_provider.dart';
 import 'screens/splash_screen.dart';
 
 void main() async {
@@ -24,6 +26,14 @@ class MyApp extends StatelessWidget {
             create: (context) => SettingsProvider()..loadSettings()),
         ChangeNotifierProvider(
             create: (context) => SnippetProvider()..loadSnippets()),
+        ChangeNotifierProxyProvider<SSHProvider, AgentProvider>(
+          create: (context) => AgentProvider(),
+          update: (context, ssh, agent) {
+            final provider = agent ?? AgentProvider();
+            provider.onLog = ssh.addLog;
+            return provider;
+          },
+        ),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, child) {

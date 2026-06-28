@@ -17,6 +17,10 @@ import '../widgets/snippet_button_panel.dart';
 import '../widgets/sftp_browser.dart';
 import '../screens/settings_screen.dart';
 import '../screens/snippet_config_screen.dart';
+import '../screens/agents_tab.dart';
+import '../utils/terminal_style_builder.dart';
+
+enum AppTab { client, server, agents, logs }
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,7 +30,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
+  AppTab _selectedTab = AppTab.client;
   bool _isFullScreen = false;
 
   @override
@@ -150,10 +154,32 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  List<AppTab> _visibleTabs(SettingsProvider settings) {
+    return <AppTab>[
+      AppTab.client,
+      if (settings.showServerTab) AppTab.server,
+      AppTab.agents,
+      AppTab.logs,
+    ];
+  }
+
+  void _ensureValidTab(SettingsProvider settings) {
+    final tabs = _visibleTabs(settings);
+    if (!tabs.contains(_selectedTab)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _selectedTab = AppTab.client);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Consumer<SSHProvider>(
-      builder: (context, ssh, child) {
+    return Consumer2<SSHProvider, SettingsProvider>(
+      builder: (context, ssh, settings, child) {
+        _ensureValidTab(settings);
+        final tabs = _visibleTabs(settings);
+        final navIndex = tabs.indexOf(_selectedTab).clamp(0, tabs.length - 1);
+
         // Automatically exit full screen if no sessions are connected
         if (_isFullScreen && !ssh.sessions.any((s) => s.isConnected)) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -172,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Consumer<SSHProvider>(
                   builder: (context, ssh, child) {
                     if (ssh.sessions.any((s) => s.isConnected) &&
-                        _selectedIndex == 0) {
+                        _selectedTab == AppTab.client) {
                       return IconButton(
                         icon: Icon(_isFullScreen
                             ? Icons.fullscreen_exit
@@ -226,36 +252,43 @@ class _HomeScreenState extends State<HomeScreen> {
             bottomNavigationBar: _isFullScreen
                 ? null
                 : NavigationBar(
-                    selectedIndex: _selectedIndex,
+                    selectedIndex: navIndex,
                     onDestinationSelected: (index) {
                       setState(() {
-                        _selectedIndex = index;
+                        _selectedTab = tabs[index];
                       });
                     },
-                    destinations: const <NavigationDestination>[
-                      NavigationDestination(
-                        icon: Icon(Icons.computer),
-                        label: 'Client',
-                      ),
-                      NavigationDestination(
-                        icon: Icon(Icons.dns),
-                        label: 'Server',
-                      ),
-                      NavigationDestination(
-                        icon: Icon(Icons.article),
-                        label: 'Logs',
-                      ),
-                    ],
+                    destinations: tabs.map((tab) {
+                      return switch (tab) {
+                        AppTab.client => const NavigationDestination(
+                            icon: Icon(Icons.computer),
+                            label: 'Client',
+                          ),
+                        AppTab.server => const NavigationDestination(
+                            icon: Icon(Icons.dns),
+                            label: 'Server',
+                          ),
+                        AppTab.agents => const NavigationDestination(
+                            icon: Icon(Icons.smart_toy),
+                            label: 'Agents',
+                          ),
+                        AppTab.logs => const NavigationDestination(
+                            icon: Icon(Icons.article),
+                            label: 'Logs',
+                          ),
+                      };
+                    }).toList(),
                   ),
             body: Column(
               children: [
                 if (!_isFullScreen) const KeyboardShortcutBar(),
                 Expanded(
                   child: IndexedStack(
-                    index: _selectedIndex,
+                    index: _selectedTab.index,
                     children: <Widget>[
                       ClientTab(isFullScreen: _isFullScreen),
                       const ServerTab(),
+                      const AgentsTab(),
                       const LogViewer(),
                     ],
                   ),
@@ -427,10 +460,7 @@ class ClientTab extends StatelessWidget {
                     active.terminal,
                     padding: const EdgeInsets.all(8),
                     theme: terminalTheme,
-                    textStyle: TerminalStyle(
-                      fontSize: settings.terminalFontSize,
-                      fontFamily: 'monospace',
-                    ),
+                    textStyle: TerminalStyleBuilder.buildTerminalStyle(settings),
                     autoResize: true,
                   ),
                 );

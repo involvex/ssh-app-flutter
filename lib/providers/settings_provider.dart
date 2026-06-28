@@ -1,8 +1,28 @@
 import 'package:flutter/material.dart';
+
 import '../models/keyboard_shortcut.dart';
 import '../services/config_service.dart';
 
 enum AppTheme { system, light, dark, hacker }
+
+enum TerminalFontFamily {
+  monospace,
+  courierNew,
+  consolas,
+  menlo,
+}
+
+enum TerminalFontWeight {
+  normal,
+  medium,
+  semiBold,
+  bold,
+}
+
+enum TerminalFontStyle {
+  normal,
+  italic,
+}
 
 class SettingsProvider extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.dark;
@@ -11,6 +31,11 @@ class SettingsProvider extends ChangeNotifier {
   List<KeyboardShortcut> _shortcuts = [];
   bool _isLoaded = false;
   double _terminalFontSize = 12.0;
+  bool _showServerTab = true;
+  int _defaultAgentPort = 5000;
+  TerminalFontFamily _terminalFontFamily = TerminalFontFamily.monospace;
+  TerminalFontWeight _terminalFontWeight = TerminalFontWeight.normal;
+  TerminalFontStyle _terminalFontStyle = TerminalFontStyle.normal;
 
   ThemeMode get themeMode => _themeMode;
   AppTheme get appTheme => _appTheme;
@@ -18,6 +43,11 @@ class SettingsProvider extends ChangeNotifier {
   List<KeyboardShortcut> get shortcuts => _shortcuts;
   bool get isLoaded => _isLoaded;
   double get terminalFontSize => _terminalFontSize;
+  bool get showServerTab => _showServerTab;
+  int get defaultAgentPort => _defaultAgentPort;
+  TerminalFontFamily get terminalFontFamily => _terminalFontFamily;
+  TerminalFontWeight get terminalFontWeight => _terminalFontWeight;
+  TerminalFontStyle get terminalFontStyle => _terminalFontStyle;
 
   List<KeyboardShortcut> getShortcutsByRow(int row) {
     return _shortcuts.where((s) => s.row == row).toList();
@@ -67,13 +97,90 @@ class SettingsProvider extends ChangeNotifier {
       _terminalFontSize = (fontSizeVal as num).toDouble();
     }
 
+    _showServerTab = settings['showServerTab'] as bool? ?? true;
+
+    final agentPortVal = settings['defaultAgentPort'];
+    if (agentPortVal != null) {
+      _defaultAgentPort = (agentPortVal as num).toInt();
+    }
+
+    _terminalFontFamily = _parseFontFamily(
+      settings['terminalFontFamily'] as String? ?? 'monospace',
+    );
+    _terminalFontWeight = _parseFontWeight(
+      settings['terminalFontWeight'] as String? ?? 'normal',
+    );
+    _terminalFontStyle = _parseFontStyle(
+      settings['terminalFontStyle'] as String? ?? 'normal',
+    );
+
     _isLoaded = true;
     notifyListeners();
+  }
+
+  static TerminalFontFamily _parseFontFamily(String value) {
+    return TerminalFontFamily.values.firstWhere(
+      (e) => e.name == value || _fontFamilyStorageKey(e) == value,
+      orElse: () => TerminalFontFamily.monospace,
+    );
+  }
+
+  static String _fontFamilyStorageKey(TerminalFontFamily family) {
+    return switch (family) {
+      TerminalFontFamily.monospace => 'monospace',
+      TerminalFontFamily.courierNew => 'courierNew',
+      TerminalFontFamily.consolas => 'consolas',
+      TerminalFontFamily.menlo => 'menlo',
+    };
+  }
+
+  static TerminalFontWeight _parseFontWeight(String value) {
+    return TerminalFontWeight.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => TerminalFontWeight.normal,
+    );
+  }
+
+  static TerminalFontStyle _parseFontStyle(String value) {
+    return TerminalFontStyle.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => TerminalFontStyle.normal,
+    );
   }
 
   Future<void> setTerminalFontSize(double size) async {
     _terminalFontSize = size;
     await _saveSetting('terminalFontSize', size);
+    notifyListeners();
+  }
+
+  Future<void> setShowServerTab(bool value) async {
+    _showServerTab = value;
+    await _saveSetting('showServerTab', value);
+    notifyListeners();
+  }
+
+  Future<void> setDefaultAgentPort(int port) async {
+    _defaultAgentPort = port;
+    await _saveSetting('defaultAgentPort', port);
+    notifyListeners();
+  }
+
+  Future<void> setTerminalFontFamily(TerminalFontFamily family) async {
+    _terminalFontFamily = family;
+    await _saveSetting('terminalFontFamily', _fontFamilyStorageKey(family));
+    notifyListeners();
+  }
+
+  Future<void> setTerminalFontWeight(TerminalFontWeight weight) async {
+    _terminalFontWeight = weight;
+    await _saveSetting('terminalFontWeight', weight.name);
+    notifyListeners();
+  }
+
+  Future<void> setTerminalFontStyle(TerminalFontStyle style) async {
+    _terminalFontStyle = style;
+    await _saveSetting('terminalFontStyle', style.name);
     notifyListeners();
   }
 

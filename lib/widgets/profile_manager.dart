@@ -3,9 +3,14 @@ import 'package:provider/provider.dart';
 import '../providers/ssh_provider.dart';
 import '../models/ssh_profile.dart';
 
-class ProfileManager extends StatelessWidget {
+class ProfileManager extends StatefulWidget {
   const ProfileManager({super.key});
 
+  @override
+  State<ProfileManager> createState() => _ProfileManagerState();
+}
+
+class _ProfileManagerState extends State<ProfileManager> {
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
@@ -64,7 +69,9 @@ class ProfileManager extends StatelessWidget {
                             color: Colors.blue,
                           ),
                           title: Text(profile.name),
-                          subtitle: Text('${profile.host}:${profile.port}'),
+                          subtitle: Text(
+                            'SSH ${profile.host}:${profile.port} · Agent ${profile.agentBaseUrl}',
+                          ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
@@ -100,97 +107,123 @@ class ProfileManager extends StatelessWidget {
     final hostController = TextEditingController(text: profile?.host ?? '');
     final portController =
         TextEditingController(text: profile?.port.toString() ?? '22');
+    final agentPortController = TextEditingController(
+      text: profile?.agentPort.toString() ?? '5000',
+    );
     final usernameController =
         TextEditingController(text: profile?.username ?? '');
     final passwordController =
         TextEditingController(text: profile?.password ?? '');
     final startupCommandController =
         TextEditingController(text: profile?.startupCommand ?? '');
-    final isServer = profile?.isServer ?? false;
+    var isServer = profile?.isServer ?? false;
+    var useHttps = profile?.useHttps ?? false;
 
     showDialog<void>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF16213E),
-          title: Text(profile == null ? 'Add Profile' : 'Edit Profile'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Profile Name'),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF16213E),
+              title: Text(profile == null ? 'Add Profile' : 'Edit Profile'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    TextField(
+                      controller: nameController,
+                      decoration:
+                          const InputDecoration(labelText: 'Profile Name'),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: hostController,
+                      decoration: const InputDecoration(labelText: 'Host'),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: portController,
+                      decoration: const InputDecoration(labelText: 'SSH Port'),
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: agentPortController,
+                      decoration: const InputDecoration(
+                        labelText: 'Agent Port (OpenCode)',
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: usernameController,
+                      decoration: const InputDecoration(labelText: 'Username'),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: passwordController,
+                      decoration: const InputDecoration(labelText: 'Password'),
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: startupCommandController,
+                      decoration: const InputDecoration(
+                        labelText: 'Startup Command (optional)',
+                        hintText: 'e.g., ls -la, pwd',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SwitchListTile(
+                      title: const Text('Server Profile'),
+                      value: isServer,
+                      onChanged: (value) =>
+                          setDialogState(() => isServer = value),
+                    ),
+                    SwitchListTile(
+                      title: const Text('Use HTTPS for Agent'),
+                      value: useHttps,
+                      onChanged: (value) =>
+                          setDialogState(() => useHttps = value),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: hostController,
-                  decoration: const InputDecoration(labelText: 'Host'),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Cancel'),
                 ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: portController,
-                  decoration: const InputDecoration(labelText: 'Port'),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: usernameController,
-                  decoration: const InputDecoration(labelText: 'Username'),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: passwordController,
-                  decoration: const InputDecoration(labelText: 'Password'),
-                  obscureText: true,
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: startupCommandController,
-                  decoration: const InputDecoration(
-                    labelText: 'Startup Command (optional)',
-                    hintText: 'e.g., ls -la, pwd',
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SwitchListTile(
-                  title: const Text('Server Profile'),
-                  value: isServer,
-                  onChanged: (value) {},
+                ElevatedButton(
+                  onPressed: () {
+                    if (nameController.text.isEmpty ||
+                        hostController.text.isEmpty) {
+                      return;
+                    }
+                    final newProfile = SSHProfile(
+                      id: profile?.id,
+                      name: nameController.text,
+                      host: hostController.text,
+                      port: int.tryParse(portController.text) ?? 22,
+                      username: usernameController.text,
+                      password: passwordController.text,
+                      isServer: isServer,
+                      startupCommand: startupCommandController.text.isNotEmpty
+                          ? startupCommandController.text
+                          : null,
+                      agentPort: int.tryParse(agentPortController.text) ?? 5000,
+                      useHttps: useHttps,
+                    );
+                    Provider.of<SSHProvider>(context, listen: false)
+                        .saveProfile(newProfile);
+                    Navigator.pop(dialogContext);
+                  },
+                  child: const Text('Save'),
                 ),
               ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (nameController.text.isEmpty ||
-                    hostController.text.isEmpty) {
-                  return;
-                }
-                final newProfile = SSHProfile(
-                  id: profile?.id,
-                  name: nameController.text,
-                  host: hostController.text,
-                  port: int.tryParse(portController.text) ?? 22,
-                  username: usernameController.text,
-                  password: passwordController.text,
-                  isServer: isServer,
-                  startupCommand: startupCommandController.text.isNotEmpty
-                      ? startupCommandController.text
-                      : null,
-                );
-                Provider.of<SSHProvider>(context, listen: false)
-                    .saveProfile(newProfile);
-                Navigator.pop(dialogContext);
-              },
-              child: const Text('Save'),
-            ),
-          ],
+            );
+          },
         );
       },
     );

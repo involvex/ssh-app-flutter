@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../providers/settings_provider.dart';
 import '../providers/ssh_provider.dart';
+import '../utils/terminal_style_builder.dart';
 
 class LogViewer extends StatelessWidget {
   const LogViewer({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<SSHProvider>(
-      builder: (context, ssh, child) {
+    return Consumer2<SSHProvider, SettingsProvider>(
+      builder: (context, ssh, settings, child) {
+        final textStyle = TerminalStyleBuilder.buildTextStyle(settings);
+
         return Column(
           children: [
             Padding(
@@ -36,8 +41,7 @@ class LogViewer extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 2.0),
                     child: Text(
                       ssh.connectionLog.reversed.toList()[index],
-                      style: const TextStyle(
-                          fontFamily: 'Courier New', fontSize: 12),
+                      style: textStyle,
                     ),
                   );
                 },

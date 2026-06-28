@@ -10,6 +10,8 @@ class SSHProfile {
   final String? privateKey;
   final bool isServer;
   final String? startupCommand;
+  final int agentPort;
+  final bool useHttps;
 
   SSHProfile({
     required this.name,
@@ -21,7 +23,12 @@ class SSHProfile {
     this.privateKey,
     this.isServer = false,
     this.startupCommand,
+    this.agentPort = 5000,
+    this.useHttps = false,
   }) : id = id ?? const Uuid().v4();
+
+  String get agentBaseUrl =>
+      '${useHttps ? 'https' : 'http'}://$host:$agentPort';
 
   SSHProfile copyWith({
     String? id,
@@ -33,6 +40,8 @@ class SSHProfile {
     String? privateKey,
     bool? isServer,
     String? startupCommand,
+    int? agentPort,
+    bool? useHttps,
   }) {
     return SSHProfile(
       id: id ?? this.id,
@@ -44,6 +53,8 @@ class SSHProfile {
       privateKey: privateKey ?? this.privateKey,
       isServer: isServer ?? this.isServer,
       startupCommand: startupCommand ?? this.startupCommand,
+      agentPort: agentPort ?? this.agentPort,
+      useHttps: useHttps ?? this.useHttps,
     );
   }
 
@@ -58,6 +69,8 @@ class SSHProfile {
       'privateKey': privateKey,
       'isServer': isServer,
       'startupCommand': startupCommand,
+      'agentPort': agentPort,
+      'useHttps': useHttps,
     };
   }
 
@@ -72,6 +85,8 @@ class SSHProfile {
       privateKey: json['privateKey'] as String?,
       isServer: json['isServer'] as bool? ?? false,
       startupCommand: json['startupCommand'] as String?,
+      agentPort: json['agentPort'] as int? ?? 5000,
+      useHttps: json['useHttps'] as bool? ?? false,
     );
   }
 }
