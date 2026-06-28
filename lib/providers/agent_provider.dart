@@ -128,6 +128,14 @@ class AgentProvider extends ChangeNotifier {
     }
   }
 
+  void clearActiveSession(String connectionId) {
+    final connection = _findConnection(connectionId);
+    if (connection == null) return;
+    connection.activeSessionId = null;
+    connection.messages = [];
+    notifyListeners();
+  }
+
   Future<void> createSession(String connectionId, {String? title}) async {
     final connection = _findConnection(connectionId);
     if (connection == null) return;

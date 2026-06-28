@@ -93,23 +93,26 @@ class _AgentsTabState extends State<AgentsTab> {
           return const Center(child: Text('No active agent connection'));
         }
 
-        return Column(
-          children: [
-            _buildConnectionBar(agents),
-            Expanded(
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 220,
-                    child: _buildSessionList(agents, active.id),
-                  ),
-                  const VerticalDivider(width: 1),
-                  Expanded(child: _buildChatView(agents, active)),
-                ],
+        final showingChat = active.activeSessionId != null;
+
+        return PopScope(
+          canPop: !showingChat,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop && showingChat) {
+              agents.clearActiveSession(active.id);
+            }
+          },
+          child: Column(
+            children: [
+              _buildConnectionBar(agents),
+              Expanded(
+                child: showingChat
+                    ? _buildChatPane(agents, active)
+                    : _buildSessionList(agents, active.id),
               ),
-            ),
-            _buildPromptInput(agents, active),
-          ],
+              if (showingChat) _buildPromptInput(agents, active),
+            ],
+          ),
         );
       },
     );
@@ -250,9 +253,19 @@ class _AgentsTabState extends State<AgentsTab> {
               final session = connection.sessions[index];
               final isActive = connection.activeSessionId == session.id;
               return ListTile(
+                dense: true,
                 selected: isActive,
-                title: Text(session.title ?? session.id ?? 'Untitled'),
-                subtitle: session.id != null ? Text(session.id!) : null,
+                title: Text(
+                  session.title ?? session.id ?? 'Untitled',
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: session.id != null
+                    ? Text(
+                        session.id!,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      )
+                    : null,
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline, size: 18),
                   onPressed: session.id == null
@@ -270,13 +283,40 @@ class _AgentsTabState extends State<AgentsTab> {
     );
   }
 
-  Widget _buildChatView(AgentProvider agents, AgentConnection active) {
-    if (active.activeSessionId == null) {
-      return const Center(
-        child: Text('Select or create a session to start chatting'),
-      );
+  Widget _buildChatPane(AgentProvider agents, AgentConnection active) {
+    final sessionId = active.activeSessionId!;
+    String title = sessionId;
+    for (final session in active.sessions) {
+      if (session.id == sessionId) {
+        title = session.title ?? sessionId;
+        break;
+      }
     }
 
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Material(
+          elevation: 1,
+          child: ListTile(
+            dense: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              tooltip: 'Back to sessions',
+              onPressed: () => agents.clearActiveSession(active.id),
+            ),
+            title: Text(
+              title,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+        Expanded(child: _buildChatView(agents, active)),
+      ],
+    );
+  }
+
+  Widget _buildChatView(AgentProvider agents, AgentConnection active) {
     if (active.isLoadingMessages) {
       return const Center(child: CircularProgressIndicator());
     }
