@@ -144,8 +144,8 @@ class _ShortcutEditorState extends State<ShortcutEditor> {
             const SizedBox(height: 16),
             Expanded(
               child: ReorderableListView.builder(
-              itemCount: _currentRowShortcuts.length,
-              onReorderItem: _onReorderItem,
+                itemCount: _currentRowShortcuts.length,
+                onReorderItem: _onReorderItem,
                 itemBuilder: (context, index) {
                   final shortcut = _currentRowShortcuts[index];
                   return _ShortcutTile(
@@ -194,7 +194,10 @@ class _ShortcutTile extends StatelessWidget {
   final ValueChanged<String> onLabelChanged;
 
   const _ShortcutTile({
-    required this.shortcut, required this.onDelete, required this.onLabelChanged, super.key,
+    required this.shortcut,
+    required this.onDelete,
+    required this.onLabelChanged,
+    super.key,
   });
 
   @override

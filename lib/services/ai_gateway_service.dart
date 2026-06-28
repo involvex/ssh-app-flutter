@@ -18,7 +18,8 @@ class AiGatewayService {
   static const String opencodeZenBaseUrl = 'https://opencode.ai/zen/v1';
   static const String kiloGatewayBaseUrl = 'https://api.kilo.ai/api/gateway';
 
-  static const String defaultOpencodeModel = AiProviderDefaults.opencodeZenModel;
+  static const String defaultOpencodeModel =
+      AiProviderDefaults.opencodeZenModel;
   static const String defaultKiloModel = AiProviderDefaults.kiloModel;
 
   static String baseUrlFor(AiProvider provider) {
@@ -126,8 +127,8 @@ class AiGatewayService {
               'role': 'system',
               'content':
                   'You generate shell commands for SSH terminals. Return only '
-                  'a single command with no markdown, no explanation, and no '
-                  'code fences.',
+                      'a single command with no markdown, no explanation, and no '
+                      'code fences.',
             },
             {
               'role': 'user',

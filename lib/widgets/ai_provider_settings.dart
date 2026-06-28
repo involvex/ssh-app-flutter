@@ -73,11 +73,11 @@ class _AiProviderSettingsState extends State<AiProviderSettings> {
     return Consumer<SettingsProvider>(
       builder: (context, settings, child) {
         final activeModel = settings.activeAiModel;
-        final modelOptions = _models.isEmpty
-            ? _fallbackModels(settings.aiProvider)
-            : _models;
-        final selectedModel =
-            modelOptions.contains(activeModel) ? activeModel : modelOptions.first;
+        final modelOptions =
+            _models.isEmpty ? _fallbackModels(settings.aiProvider) : _models;
+        final selectedModel = modelOptions.contains(activeModel)
+            ? activeModel
+            : modelOptions.first;
 
         return Card(
           child: Padding(

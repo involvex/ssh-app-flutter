@@ -23,8 +23,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    final settings =
-        Provider.of<SettingsProvider>(context, listen: false);
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
     _agentPortController = TextEditingController(
       text: settings.defaultAgentPort.toString(),
     );

@@ -32,8 +32,7 @@ class _AgentsTabState extends State<AgentsTab> {
   bool _permissionDialogVisible = false;
 
   bool get _isDesktopPlatform =>
-      !kIsWeb &&
-      (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
+      !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
 
   @override
   void dispose() {
@@ -220,7 +219,8 @@ class _AgentsTabState extends State<AgentsTab> {
         }
 
         if (agents.connections.isEmpty) {
-          return _buildDisconnectedView(ssh.profiles, settings.defaultAgentPort);
+          return _buildDisconnectedView(
+              ssh.profiles, settings.defaultAgentPort);
         }
 
         final active = agents.activeConnection;
@@ -280,9 +280,8 @@ class _AgentsTabState extends State<AgentsTab> {
                 'Connect to opencode serve on 127.0.0.1:$agentPort',
               ),
               trailing: const Icon(Icons.link),
-              onTap: _isConnecting
-                  ? null
-                  : () => _connectLocalDesktop(agentPort),
+              onTap:
+                  _isConnecting ? null : () => _connectLocalDesktop(agentPort),
             ),
           ),
           Padding(
@@ -363,8 +362,7 @@ class _AgentsTabState extends State<AgentsTab> {
           selected: isActive,
           avatar: CircleAvatar(
             radius: 4,
-            backgroundColor:
-                connection.isConnected ? Colors.green : Colors.red,
+            backgroundColor: connection.isConnected ? Colors.green : Colors.red,
           ),
           label: Text(connection.profile.name),
           onPressed: () => agents.switchActiveConnection(connection.id),
@@ -461,7 +459,8 @@ class _AgentsTabState extends State<AgentsTab> {
                 )
               : connection.sessions.isEmpty
                   ? const Center(
-                      child: Text('No sessions yet. Create one to get started.'),
+                      child:
+                          Text('No sessions yet. Create one to get started.'),
                     )
                   : ListView.builder(
                       itemCount: connection.sessions.length,

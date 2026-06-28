@@ -129,83 +129,84 @@ class _SftpBrowserState extends State<SftpBrowser> {
         child: Column(
           children: [
             ListTile(
-            title: Text('SFTP — $currentPath'),
-            trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-              IconButton(
-                  onPressed: _upload, icon: const Icon(Icons.upload_file)),
-              IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh)),
-            ]),
-          ),
-          if (availableDrives.isNotEmpty)
-            SizedBox(
-              height: 40,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: availableDrives.length,
-                itemBuilder: (context, idx) {
-                  final drive = availableDrives[idx];
-                  final isSelected = currentPath.startsWith('$drive:');
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: ChoiceChip(
-                      label: Text('$drive:'),
-                      selected: isSelected,
-                      onSelected: (_) async {
-                        setState(() => currentPath = '$drive:/');
-                        await _refresh();
+              title: Text('SFTP — $currentPath'),
+              trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                IconButton(
+                    onPressed: _upload, icon: const Icon(Icons.upload_file)),
+                IconButton(
+                    onPressed: _refresh, icon: const Icon(Icons.refresh)),
+              ]),
+            ),
+            if (availableDrives.isNotEmpty)
+              SizedBox(
+                height: 40,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: availableDrives.length,
+                  itemBuilder: (context, idx) {
+                    final drive = availableDrives[idx];
+                    final isSelected = currentPath.startsWith('$drive:');
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: ChoiceChip(
+                        label: Text('$drive:'),
+                        selected: isSelected,
+                        onSelected: (_) async {
+                          setState(() => currentPath = '$drive:/');
+                          await _refresh();
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            Expanded(
+              child: loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: entries.length,
+                      itemBuilder: (context, idx) {
+                        final item = entries[idx];
+                        final name = item['name'] as String;
+                        final isDir = item['isDirectory'] as bool? ?? false;
+
+                        return ListTile(
+                          leading: Icon(
+                              isDir ? Icons.folder : Icons.insert_drive_file),
+                          title: Text(name),
+                          onTap: () async {
+                            if (name == '..') {
+                              final lastSlash = currentPath.lastIndexOf('/');
+                              if (lastSlash <= 0) {
+                                setState(() =>
+                                    currentPath = lastSlash == 0 ? '/' : '.');
+                              } else {
+                                setState(() => currentPath =
+                                    currentPath.substring(0, lastSlash));
+                              }
+                              await _refresh();
+                              return;
+                            }
+                            if (isDir) {
+                              setState(() => currentPath =
+                                  (currentPath == '.' || currentPath == '/')
+                                      ? name
+                                      : '$currentPath/$name');
+                              await _refresh();
+                            }
+                          },
+                          trailing: isDir
+                              ? null
+                              : IconButton(
+                                  icon: const Icon(Icons.download),
+                                  onPressed: () => _download(name)),
+                        );
                       },
                     ),
-                  );
-                },
-              ),
             ),
-          Expanded(
-            child: loading
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    itemCount: entries.length,
-                    itemBuilder: (context, idx) {
-                      final item = entries[idx];
-                      final name = item['name'] as String;
-                      final isDir = item['isDirectory'] as bool? ?? false;
-
-                      return ListTile(
-                        leading: Icon(
-                            isDir ? Icons.folder : Icons.insert_drive_file),
-                        title: Text(name),
-                        onTap: () async {
-                          if (name == '..') {
-                            final lastSlash = currentPath.lastIndexOf('/');
-                            if (lastSlash <= 0) {
-                              setState(() =>
-                                  currentPath = lastSlash == 0 ? '/' : '.');
-                            } else {
-                              setState(() => currentPath =
-                                  currentPath.substring(0, lastSlash));
-                            }
-                            await _refresh();
-                            return;
-                          }
-                          if (isDir) {
-                            setState(() => currentPath =
-                                (currentPath == '.' || currentPath == '/')
-                                    ? name
-                                    : '$currentPath/$name');
-                            await _refresh();
-                          }
-                        },
-                        trailing: isDir
-                            ? null
-                            : IconButton(
-                                icon: const Icon(Icons.download),
-                                onPressed: () => _download(name)),
-                      );
-                    },
-                  ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
   }
 }

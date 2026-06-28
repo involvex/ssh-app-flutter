@@ -285,7 +285,8 @@ class SSHProvider extends ChangeNotifier {
     }
   }
 
-  String getActiveTerminalContext({int lineCount = kDefaultTerminalContextLines}) {
+  String getActiveTerminalContext(
+      {int lineCount = kDefaultTerminalContextLines}) {
     final entry = activeSession;
     if (entry == null || !entry.isConnected) {
       return '';

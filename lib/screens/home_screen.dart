@@ -205,7 +205,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             : Icons.fullscreen),
                         tooltip:
                             _isFullScreen ? 'Exit Full Screen' : 'Full Screen',
-                        onPressed: () => setState(() => _isFullScreen = !_isFullScreen),
+                        onPressed: () =>
+                            setState(() => _isFullScreen = !_isFullScreen),
                       );
                     }
                     return const SizedBox.shrink();
@@ -460,7 +461,8 @@ class ClientTab extends StatelessWidget {
                     active.terminal,
                     padding: const EdgeInsets.all(8),
                     theme: terminalTheme,
-                    textStyle: TerminalStyleBuilder.buildTerminalStyle(settings),
+                    textStyle:
+                        TerminalStyleBuilder.buildTerminalStyle(settings),
                     autoResize: true,
                   ),
                 );

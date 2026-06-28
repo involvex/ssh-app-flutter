@@ -69,8 +69,8 @@ class _SnippetButtonPanelState extends State<SnippetButtonPanel> {
                         child: Row(
                           children: [
                             ...displaySnippets.map((s) => Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 4),
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 4),
                                   child: ActionChip(
                                     label: Text(
                                       s.name,
@@ -152,78 +152,80 @@ class _SnippetSelectionSheet extends StatelessWidget {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Select Snippet',
-                    style: theme.textTheme.titleLarge,
-                  ),
-                  TextButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const SnippetConfigScreen()),
-                      );
-                    },
-                    icon: const Icon(Icons.edit),
-                    label: const Text('Manage'),
-                  ),
-                ],
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Select Snippet',
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    TextButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  const SnippetConfigScreen()),
+                        );
+                      },
+                      icon: const Icon(Icons.edit),
+                      label: const Text('Manage'),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const Divider(),
-            Expanded(
-              child: Consumer2<SSHProvider, SnippetProvider>(
-                builder: (context, ssh, snippets, child) {
-                  if (snippets.snippets.isEmpty) {
-                    return const Center(child: Text('No snippets found.'));
-                  }
-                  return ListView.builder(
-                    controller: scrollController,
-                    itemCount: snippets.snippets.length,
-                    itemBuilder: (context, index) {
-                      final snippet = snippets.snippets[index];
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: theme.colorScheme.primaryContainer,
-                          child: Icon(
-                            Icons.terminal,
-                            size: 20,
-                            color: theme.colorScheme.onPrimaryContainer,
+              const Divider(),
+              Expanded(
+                child: Consumer2<SSHProvider, SnippetProvider>(
+                  builder: (context, ssh, snippets, child) {
+                    if (snippets.snippets.isEmpty) {
+                      return const Center(child: Text('No snippets found.'));
+                    }
+                    return ListView.builder(
+                      controller: scrollController,
+                      itemCount: snippets.snippets.length,
+                      itemBuilder: (context, index) {
+                        final snippet = snippets.snippets[index];
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: theme.colorScheme.primaryContainer,
+                            child: Icon(
+                              Icons.terminal,
+                              size: 20,
+                              color: theme.colorScheme.onPrimaryContainer,
+                            ),
                           ),
-                        ),
-                        title: Text(snippet.name),
-                        subtitle: Text(
-                          snippet.content,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall,
-                        ),
-                        onTap: () {
-                          final active = ssh.activeSession;
-                          if (active != null &&
-                              active.isConnected &&
-                              active.shellSession != null) {
-                            active.shellSession!.stdin
-                                .add(utf8.encode('${snippet.content}\r'));
-                          }
-                          Navigator.pop(context);
-                        },
-                      );
-                    },
-                  );
-                },
+                          title: Text(snippet.name),
+                          subtitle: Text(
+                            snippet.content,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                          onTap: () {
+                            final active = ssh.activeSession;
+                            if (active != null &&
+                                active.isConnected &&
+                                active.shellSession != null) {
+                              active.shellSession!.stdin
+                                  .add(utf8.encode('${snippet.content}\r'));
+                            }
+                            Navigator.pop(context);
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
+            ],
+          ),
+        );
+      },
+    );
+  }
 }

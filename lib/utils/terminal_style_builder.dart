@@ -16,8 +16,9 @@ class TerminalStyleBuilder {
         ? FontStyle.italic
         : FontStyle.normal;
 
-    final useGoogleFonts = settings.terminalFontWeight != TerminalFontWeight.normal ||
-        settings.terminalFontStyle == TerminalFontStyle.italic;
+    final useGoogleFonts =
+        settings.terminalFontWeight != TerminalFontWeight.normal ||
+            settings.terminalFontStyle == TerminalFontStyle.italic;
 
     if (useGoogleFonts) {
       return GoogleFonts.jetBrainsMono(

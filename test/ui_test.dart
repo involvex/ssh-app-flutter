@@ -19,7 +19,8 @@ void main() {
       await ConfigService.init();
     });
 
-    testWidgets('App initializes and renders splash screen', (final WidgetTester tester) async {
+    testWidgets('App initializes and renders splash screen',
+        (final WidgetTester tester) async {
       // Suppress overflow errors - these are UI issues to fix separately
       final List<FlutterErrorDetails> errors = <FlutterErrorDetails>[];
       final FlutterExceptionHandler? originalHandler = FlutterError.onError;
@@ -55,7 +56,8 @@ void main() {
       }
     });
 
-    testWidgets('Home screen renders with main UI components', (final WidgetTester tester) async {
+    testWidgets('Home screen renders with main UI components',
+        (final WidgetTester tester) async {
       final List<FlutterErrorDetails> errors = <FlutterErrorDetails>[];
       final FlutterExceptionHandler? originalHandler = FlutterError.onError;
       FlutterError.onError = (final FlutterErrorDetails details) {
@@ -95,7 +97,8 @@ void main() {
       }
     });
 
-    testWidgets('Settings provider is accessible and initialized', (final WidgetTester tester) async {
+    testWidgets('Settings provider is accessible and initialized',
+        (final WidgetTester tester) async {
       final FlutterExceptionHandler? originalHandler = FlutterError.onError;
       FlutterError.onError = (final FlutterErrorDetails details) {
         if (!details.exceptionAsString().contains('overflowed')) {
@@ -127,7 +130,8 @@ void main() {
       }
     });
 
-    testWidgets('SSH provider is accessible and initialized', (final WidgetTester tester) async {
+    testWidgets('SSH provider is accessible and initialized',
+        (final WidgetTester tester) async {
       final FlutterExceptionHandler? originalHandler = FlutterError.onError;
       FlutterError.onError = (final FlutterErrorDetails details) {
         if (!details.exceptionAsString().contains('overflowed')) {
@@ -158,7 +162,8 @@ void main() {
       }
     });
 
-    testWidgets('Snippet provider is accessible and initialized', (final WidgetTester tester) async {
+    testWidgets('Snippet provider is accessible and initialized',
+        (final WidgetTester tester) async {
       final FlutterExceptionHandler? originalHandler = FlutterError.onError;
       FlutterError.onError = (final FlutterErrorDetails details) {
         if (!details.exceptionAsString().contains('overflowed')) {
@@ -189,7 +194,8 @@ void main() {
       }
     });
 
-    testWidgets('Theme system renders correctly', (final WidgetTester tester) async {
+    testWidgets('Theme system renders correctly',
+        (final WidgetTester tester) async {
       final FlutterExceptionHandler? originalHandler = FlutterError.onError;
       FlutterError.onError = (final FlutterErrorDetails details) {
         if (!details.exceptionAsString().contains('overflowed')) {
@@ -223,7 +229,8 @@ void main() {
       }
     });
 
-    testWidgets('Terminal widget is present in home screen', (final WidgetTester tester) async {
+    testWidgets('Terminal widget is present in home screen',
+        (final WidgetTester tester) async {
       final FlutterExceptionHandler? originalHandler = FlutterError.onError;
       FlutterError.onError = (final FlutterErrorDetails details) {
         if (!details.exceptionAsString().contains('overflowed')) {
@@ -251,7 +258,8 @@ void main() {
       }
     });
 
-    testWidgets('Keyboard shortcuts bar renders in home screen', (final WidgetTester tester) async {
+    testWidgets('Keyboard shortcuts bar renders in home screen',
+        (final WidgetTester tester) async {
       final FlutterExceptionHandler? originalHandler = FlutterError.onError;
       FlutterError.onError = (final FlutterErrorDetails details) {
         if (!details.exceptionAsString().contains('overflowed')) {
@@ -281,7 +289,8 @@ void main() {
       }
     });
 
-    testWidgets('Connection log widget renders correctly', (final WidgetTester tester) async {
+    testWidgets('Connection log widget renders correctly',
+        (final WidgetTester tester) async {
       final FlutterExceptionHandler? originalHandler = FlutterError.onError;
       FlutterError.onError = (final FlutterErrorDetails details) {
         if (!details.exceptionAsString().contains('overflowed')) {
@@ -311,7 +320,8 @@ void main() {
       }
     });
 
-    testWidgets('App handles provider state updates', (final WidgetTester tester) async {
+    testWidgets('App handles provider state updates',
+        (final WidgetTester tester) async {
       final FlutterExceptionHandler? originalHandler = FlutterError.onError;
       FlutterError.onError = (final FlutterErrorDetails details) {
         if (!details.exceptionAsString().contains('overflowed')) {
@@ -346,7 +356,8 @@ void main() {
       }
     });
 
-    testWidgets('All screens navigate without errors', (final WidgetTester tester) async {
+    testWidgets('All screens navigate without errors',
+        (final WidgetTester tester) async {
       final FlutterExceptionHandler? originalHandler = FlutterError.onError;
       FlutterError.onError = (final FlutterErrorDetails details) {
         if (!details.exceptionAsString().contains('overflowed')) {
@@ -385,7 +396,8 @@ void main() {
       }
     });
 
-    testWidgets('Responsive layout adapts to different screen sizes', (final WidgetTester tester) async {
+    testWidgets('Responsive layout adapts to different screen sizes',
+        (final WidgetTester tester) async {
       final FlutterExceptionHandler? originalHandler = FlutterError.onError;
       FlutterError.onError = (final FlutterErrorDetails details) {
         if (!details.exceptionAsString().contains('overflowed')) {
