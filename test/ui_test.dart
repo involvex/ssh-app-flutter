@@ -243,10 +243,9 @@ void main() {
           ),
         );
 
-        await tester.pumpAndSettle();
+        await tester.pumpAndSettle(const Duration(seconds: 3));
 
-        // Verify container for terminal is rendered
-        expect(find.byType(Container), findsWidgets);
+        expect(find.text('No session. Click + to connect'), findsOneWidget);
       } finally {
         FlutterError.onError = originalHandler;
       }

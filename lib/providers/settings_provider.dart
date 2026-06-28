@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../models/ai_provider.dart';
 import '../models/keyboard_shortcut.dart';
 import '../services/config_service.dart';
+import '../services/secure_storage_service.dart';
 
 enum AppTheme { system, light, dark, hacker }
 
@@ -36,6 +38,11 @@ class SettingsProvider extends ChangeNotifier {
   TerminalFontFamily _terminalFontFamily = TerminalFontFamily.monospace;
   TerminalFontWeight _terminalFontWeight = TerminalFontWeight.normal;
   TerminalFontStyle _terminalFontStyle = TerminalFontStyle.normal;
+  AiProvider _aiProvider = AiProvider.opencodeZen;
+  String _opencodeZenApiKey = '';
+  String _kiloApiKey = '';
+  String _opencodeZenModel = AiProviderDefaults.opencodeZenModel;
+  String _kiloModel = AiProviderDefaults.kiloModel;
 
   ThemeMode get themeMode => _themeMode;
   AppTheme get appTheme => _appTheme;
@@ -48,6 +55,21 @@ class SettingsProvider extends ChangeNotifier {
   TerminalFontFamily get terminalFontFamily => _terminalFontFamily;
   TerminalFontWeight get terminalFontWeight => _terminalFontWeight;
   TerminalFontStyle get terminalFontStyle => _terminalFontStyle;
+  AiProvider get aiProvider => _aiProvider;
+  String get opencodeZenApiKey => _opencodeZenApiKey;
+  String get kiloApiKey => _kiloApiKey;
+  String get opencodeZenModel => _opencodeZenModel;
+  String get kiloModel => _kiloModel;
+
+  String get activeAiApiKey => switch (_aiProvider) {
+        AiProvider.opencodeZen => _opencodeZenApiKey,
+        AiProvider.kiloGateway => _kiloApiKey,
+      };
+
+  String get activeAiModel => switch (_aiProvider) {
+        AiProvider.opencodeZen => _opencodeZenModel,
+        AiProvider.kiloGateway => _kiloModel,
+      };
 
   List<KeyboardShortcut> getShortcutsByRow(int row) {
     return _shortcuts.where((s) => s.row == row).toList();
@@ -113,6 +135,22 @@ class SettingsProvider extends ChangeNotifier {
     _terminalFontStyle = _parseFontStyle(
       settings['terminalFontStyle'] as String? ?? 'normal',
     );
+
+    _aiProvider = AiProvider.values.firstWhere(
+      (e) => e.name == (settings['aiProvider'] as String? ?? 'opencodeZen'),
+      orElse: () => AiProvider.opencodeZen,
+    );
+
+    if (await SecureStorageService.migrateApiKeysFromSettings(settings)) {
+      await ConfigService.saveSettings(settings);
+    }
+
+    _opencodeZenApiKey = await SecureStorageService.readOpencodeZenApiKey();
+    _kiloApiKey = await SecureStorageService.readKiloApiKey();
+    _opencodeZenModel = settings['opencodeZenModel'] as String? ??
+        AiProviderDefaults.opencodeZenModel;
+    _kiloModel =
+        settings['kiloModel'] as String? ?? AiProviderDefaults.kiloModel;
 
     _isLoaded = true;
     notifyListeners();
@@ -181,6 +219,36 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> setTerminalFontStyle(TerminalFontStyle style) async {
     _terminalFontStyle = style;
     await _saveSetting('terminalFontStyle', style.name);
+    notifyListeners();
+  }
+
+  Future<void> setAiProvider(AiProvider provider) async {
+    _aiProvider = provider;
+    await _saveSetting('aiProvider', provider.name);
+    notifyListeners();
+  }
+
+  Future<void> setOpencodeZenApiKey(String value) async {
+    _opencodeZenApiKey = value;
+    await SecureStorageService.writeOpencodeZenApiKey(value);
+    notifyListeners();
+  }
+
+  Future<void> setKiloApiKey(String value) async {
+    _kiloApiKey = value;
+    await SecureStorageService.writeKiloApiKey(value);
+    notifyListeners();
+  }
+
+  Future<void> setOpencodeZenModel(String value) async {
+    _opencodeZenModel = value;
+    await _saveSetting('opencodeZenModel', value);
+    notifyListeners();
+  }
+
+  Future<void> setKiloModel(String value) async {
+    _kiloModel = value;
+    await _saveSetting('kiloModel', value);
     notifyListeners();
   }
 

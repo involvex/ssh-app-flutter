@@ -9,6 +9,7 @@ import '../models/ssh_profile.dart';
 import '../services/config_service.dart';
 import '../services/network_discovery_service.dart';
 import '../models/session_entry.dart';
+import '../utils/terminal_context.dart';
 
 class SSHProvider extends ChangeNotifier {
   // sessions container
@@ -263,6 +264,17 @@ class SSHProvider extends ChangeNotifier {
     if (entry != null && entry.shellSession != null && entry.isConnected) {
       entry.shellSession!.stdin.add(utf8.encode(data));
     }
+  }
+
+  String getActiveTerminalContext({int lineCount = kDefaultTerminalContextLines}) {
+    final entry = activeSession;
+    if (entry == null || !entry.isConnected) {
+      return '';
+    }
+    return extractRecentTerminalOutput(
+      entry.terminal,
+      lineCount: lineCount,
+    );
   }
 
   String _getCtrlLabel(int charCode) {

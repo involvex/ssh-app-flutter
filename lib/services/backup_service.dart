@@ -4,18 +4,22 @@ import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'config_service.dart';
+import 'secure_storage_service.dart';
 
 class BackupService {
   static const int _backupVersion = 1;
 
   static Future<void> export() async {
+    final settings = SecureStorageService.stripApiKeys(
+      await ConfigService.getSettings(),
+    );
     final data = <String, dynamic>{
       'version': _backupVersion,
       'exportedAt': DateTime.now().toIso8601String(),
       'profiles': await ConfigService.getProfiles(),
       'sshKeys': await ConfigService.getSSHKeys(),
       'snippets': await ConfigService.getSnippets(),
-      'settings': await ConfigService.getSettings(),
+      'settings': settings,
       'lastSession': await ConfigService
           .getLastSession(), // nullable; serialized as null if absent
     };
@@ -74,9 +78,9 @@ class BackupService {
       );
     }
     if (data['settings'] is Map) {
-      await ConfigService.saveSettings(
-        Map<String, dynamic>.from(data['settings'] as Map),
-      );
+      final settings = Map<String, dynamic>.from(data['settings'] as Map);
+      await SecureStorageService.importApiKeysFromBackup(settings);
+      await ConfigService.saveSettings(settings);
     }
     if (data['lastSession'] is Map) {
       await ConfigService.saveLastSession(

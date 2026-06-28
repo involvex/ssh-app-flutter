@@ -18,6 +18,7 @@ enum ShortcutAction {
   ctrlL,
   ctrlA,
   ctrlP,
+  ctrlV,
 }
 
 class KeyboardShortcut {
@@ -56,6 +57,7 @@ class KeyboardShortcut {
       ShortcutAction.ctrlL => 'ctrl_l',
       ShortcutAction.ctrlA => 'ctrl_a',
       ShortcutAction.ctrlP => 'ctrl_p',
+      ShortcutAction.ctrlV => 'ctrl_v',
     };
   }
 
@@ -118,6 +120,7 @@ class KeyboardShortcut {
       'ctrl_l' => ShortcutAction.ctrlL,
       'ctrl_a' => ShortcutAction.ctrlA,
       'ctrl_p' => ShortcutAction.ctrlP,
+      'ctrl_v' => ShortcutAction.ctrlV,
       _ => ShortcutAction.newConnection,
     };
   }
@@ -202,6 +205,11 @@ class KeyboardShortcut {
             description: 'Clear',
             action: ShortcutAction.ctrlL,
             charCode: 12,
+            row: 2),
+        KeyboardShortcut(
+            label: 'Ctrl+V',
+            description: 'Paste',
+            action: ShortcutAction.ctrlV,
             row: 2),
       ];
 }

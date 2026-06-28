@@ -22,9 +22,10 @@ dependencies:
   uuid: ^4.3.3
   share_plus: ^13.1.0
   file_picker: ^12.0.0-beta.4
-  google_fonts: ^6.2.1
+  google_fonts: ^8.1.0
   opencode_api: ^1.0.0
   dio: ^5.8.0
+  flutter_secure_storage: ^10.3.1
 
 dev_dependencies:
   flutter_test:

@@ -1,11 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:xterm/xterm.dart';
 import '../models/keyboard_shortcut.dart';
 import '../providers/settings_provider.dart';
 import '../providers/ssh_provider.dart';
+import 'ai_command_button.dart';
 import 'connection_modal.dart';
 import 'profile_manager.dart';
 import 'network_discovery.dart';
@@ -37,6 +39,7 @@ class KeyboardShortcutBar extends StatelessWidget {
           final shortcuts = settings.getShortcutsByRow(rowIndex);
           final active = ssh.activeSession;
           return _ShortcutRow(
+            rowIndex: rowIndex,
             shortcuts: shortcuts,
             isConnected: active != null && active.isConnected,
           );
@@ -46,6 +49,7 @@ class KeyboardShortcutBar extends StatelessWidget {
           children: List.generate(maxRow + 1, (rowIndex) {
             final shortcuts = settings.getShortcutsByRow(rowIndex);
             return _ShortcutRow(
+              rowIndex: rowIndex,
               shortcuts: shortcuts,
               isConnected: ssh.activeSession?.isConnected ?? false,
             );
@@ -57,10 +61,12 @@ class KeyboardShortcutBar extends StatelessWidget {
 }
 
 class _ShortcutRow extends StatelessWidget {
+  final int rowIndex;
   final List<KeyboardShortcut> shortcuts;
   final bool isConnected;
 
   const _ShortcutRow({
+    required this.rowIndex,
     required this.shortcuts,
     required this.isConnected,
   });
@@ -83,6 +89,7 @@ class _ShortcutRow extends StatelessWidget {
                   shortcut: s,
                   isConnected: isConnected,
                 )),
+            if (rowIndex == 0 && isConnected) const AiCommandButton(),
             const SizedBox(width: 8),
           ],
         ),
@@ -188,6 +195,11 @@ class _ShortcutChip extends StatelessWidget {
           ssh.sendControlCharacter(shortcut.charCode!);
         }
         break;
+      case ShortcutAction.ctrlV:
+        if (isConnected) {
+          _pasteFromClipboard(context, ssh);
+        }
+        break;
       case ShortcutAction.arrowUp:
         if (isConnected) {
           final active = ssh.activeSession;
@@ -229,6 +241,23 @@ class _ShortcutChip extends StatelessWidget {
         }
         break;
     }
+  }
+
+  Future<void> _pasteFromClipboard(
+    BuildContext context,
+    SSHProvider ssh,
+  ) async {
+    final data = await Clipboard.getData('text/plain');
+    final text = data?.text?.trim();
+    if (text == null || text.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Clipboard is empty')),
+        );
+      }
+      return;
+    }
+    ssh.sendString(text);
   }
 
   void _showConnectionModal(BuildContext context) {

@@ -6,6 +6,7 @@ import '../widgets/theme_picker.dart';
 import '../widgets/shortcut_editor.dart';
 import '../widgets/keyboard_shortcut_bar.dart';
 import '../widgets/terminal_font_settings.dart';
+import '../widgets/ai_provider_settings.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -138,6 +139,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               const TerminalFontSettings(),
+              const Divider(height: 32),
+              const Text('AI Provider',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              const AiProviderSettings(),
               const Divider(height: 32),
               const Text('Keyboard Shortcuts',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
