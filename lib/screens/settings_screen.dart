@@ -95,7 +95,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       Slider(
                         value: settings.terminalFontSize,
-                        min: 8,
+                        min: 6,
                         max: 24,
                         divisions: 16,
                         onChanged: (val) => settings.setTerminalFontSize(val),
