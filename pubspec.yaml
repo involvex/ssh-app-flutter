@@ -1,5 +1,6 @@
 name: ssh_app
 description: Flutter SSH Server & Client Application
+publish_to: none
 version: 1.0.0+1
 
 environment:
@@ -26,6 +27,8 @@ dependencies:
   opencode_api: ^1.0.0
   dio: ^5.8.0
   flutter_secure_storage: ^10.3.1
+  home_widget:
+    path: packages/home_widget
 
 dev_dependencies:
   flutter_test:

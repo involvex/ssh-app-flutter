@@ -33,6 +33,14 @@ class AgentProvider extends ChangeNotifier {
 
   void Function(String message)? onLog;
 
+  Future<void> connectFromProfileAndOpenRecent(SSHProfile profile) async {
+    final connection = await connectFromProfile(profile);
+    final recent = connection.sessions.where((s) => s.id != null).firstOrNull;
+    if (recent?.id != null) {
+      await selectSession(connection.id, recent!.id!);
+    }
+  }
+
   Future<AgentConnection> connectFromProfile(SSHProfile profile) async {
     final username =
         profile.username.isNotEmpty ? profile.username : 'opencode';

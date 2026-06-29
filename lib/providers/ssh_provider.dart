@@ -7,6 +7,7 @@ import 'package:network_info_plus/network_info_plus.dart';
 
 import '../models/ssh_profile.dart';
 import '../services/config_service.dart';
+import '../services/widget_profile_service.dart';
 import '../services/network_discovery_service.dart';
 import '../models/session_entry.dart';
 import '../utils/terminal_context.dart';
@@ -35,6 +36,7 @@ class SSHProvider extends ChangeNotifier {
       lastSession = SSHProfile.fromJson(sessionData);
     }
 
+    await WidgetProfileService.syncProfiles(profiles);
     notifyListeners();
   }
 
@@ -47,12 +49,14 @@ class SSHProvider extends ChangeNotifier {
     }
 
     await ConfigService.saveProfiles(profiles.map((e) => e.toJson()).toList());
+    await WidgetProfileService.syncProfiles(profiles);
     notifyListeners();
   }
 
   Future<void> deleteProfile(String id) async {
     profiles.removeWhere((p) => p.id == id);
     await ConfigService.saveProfiles(profiles.map((e) => e.toJson()).toList());
+    await WidgetProfileService.syncProfiles(profiles);
     notifyListeners();
   }
 

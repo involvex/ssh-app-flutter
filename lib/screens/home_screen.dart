@@ -1,5 +1,10 @@
+import 'dart:async';
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:xterm/xterm.dart';
 import 'package:xterm/ui.dart';
@@ -18,12 +23,15 @@ import '../widgets/sftp_browser.dart';
 import '../screens/settings_screen.dart';
 import '../screens/snippet_config_screen.dart';
 import '../screens/agents_tab.dart';
+import '../services/widget_launch_handler.dart';
 import '../utils/terminal_style_builder.dart';
 
 enum AppTab { client, server, agents, logs }
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.pendingLaunch});
+
+  final WidgetLaunchAction? pendingLaunch;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -32,16 +40,57 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   AppTab _selectedTab = AppTab.client;
   bool _isFullScreen = false;
+  StreamSubscription<Uri?>? _widgetClickSub;
 
   @override
   void initState() {
     super.initState();
     _loadConfig();
+    if (!kIsWeb && Platform.isAndroid) {
+      _widgetClickSub = HomeWidget.widgetClicked.listen(_onWidgetClicked);
+    }
+  }
+
+  @override
+  void dispose() {
+    unawaited(_widgetClickSub?.cancel());
+    super.dispose();
   }
 
   Future<void> _loadConfig() async {
     final ssh = Provider.of<SSHProvider>(context, listen: false);
     await ssh.loadConfig();
+    if (!mounted) {
+      return;
+    }
+    final pending = widget.pendingLaunch;
+    if (pending != null) {
+      await WidgetLaunchHandler.execute(
+        context,
+        pending,
+        onTabSelected: _selectTab,
+      );
+    }
+  }
+
+  void _selectTab(AppTab tab) {
+    if (!mounted) {
+      return;
+    }
+    setState(() => _selectedTab = tab);
+  }
+
+  void _onWidgetClicked(Uri? uri) {
+    final action = WidgetLaunchHandler.parseUri(uri);
+    if (action == null || !mounted) {
+      return;
+    }
+    // ignore: unawaited_futures
+    WidgetLaunchHandler.execute(
+      context,
+      action,
+      onTabSelected: _selectTab,
+    );
   }
 
   void _handleKeyEvent(KeyEvent event) {

@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'config_service.dart';
 import 'secure_storage_service.dart';
+import 'widget_profile_service.dart';
 
 class BackupService {
   static const int _backupVersion = 1;
@@ -89,6 +90,8 @@ class BackupService {
     } else if (data.containsKey('lastSession') && data['lastSession'] == null) {
       // Skip — no last session to restore
     }
+
+    await WidgetProfileService.syncFromConfig();
 
     return 'Import successful';
   }

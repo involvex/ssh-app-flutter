@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_ssh_title">SSH Connect</string>
+    <string name="widget_agent_title">Agent Connect</string>
+    <string name="widget_no_profiles">No profiles</string>
+</resources>

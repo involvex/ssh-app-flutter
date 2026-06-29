@@ -103,3 +103,23 @@ lib/
 4. **UI Decoupling**: Keep business logic in providers/services; widgets should only handle display and user interaction.
 5. **Clean Resources**: Always implement `dispose()` in providers to close sockets, PTYs, and timers.
 6. **Strict Typing**: Maintain `strict-casts` and `strict-raw-types` compliance.
+
+## Learned User Preferences
+
+- Prefer a native OpenCode HTTP API UI for the Agents tab over WebView or an external browser.
+- Handle agent mode switching only through `/agent` slash commands; do not add a separate agent picker UI.
+- Support model and provider configuration via slash commands (`/model`, `/models`, `/connect`) plus a config sheet in the Agents tab chat toolbar.
+- Use the SFTP directory browser for agent project directory selection, not the local FilePicker.
+- Target home-screen quick-connect widgets at Android only; the Agent widget should connect and resume the most recently updated session.
+- Keep the Server tab optional behind a Settings toggle (`showServerTab`).
+
+## Learned Workspace Facts
+
+- Home navigation uses `AppTab` (Client, Server, Agents, Logs) with an `IndexedStack`; Server is omitted when `showServerTab` is false.
+- OpenCode integrates through `opencode_api` and `OpenCodeConnectionService`; sessions are scoped by a `directory` query param.
+- `SSHProfile` includes `agentPort` (default 5000) and `useHttps`; `agentBaseUrl` builds the OpenCode URL.
+- `AgentProvider` is a `ChangeNotifierProxyProvider` that routes `onLog` to `SSHProvider.addLog`.
+- Agent directory path persists in ConfigService as `agent_last_directory`.
+- Android widgets (`SshQuickConnectWidget`, `AgentQuickConnectWidget`) sync profiles via `WidgetProfileService` and deep-link through `WidgetLaunchHandler`.
+- Terminal styling is centralized in `TerminalStyleBuilder` (font family, weight, style, size) and uses `google_fonts` for bold/italic variants.
+- `lib/utils/agent_session_utils.dart` holds session sort helpers and `agentDirectoryScopeForConnection`.

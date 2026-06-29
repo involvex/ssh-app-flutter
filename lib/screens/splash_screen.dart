@@ -1,6 +1,13 @@
+import 'dart:async';
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:home_widget/home_widget.dart';
+
 import 'home_screen.dart';
 import '../services/config_service.dart';
+import '../services/widget_launch_handler.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -18,11 +25,28 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _initializeApp() async {
     await ConfigService.init();
-    await Future<void>.delayed(const Duration(seconds: 2));
+    final pendingLaunch = await _readPendingWidgetLaunch();
+    if (pendingLaunch == null) {
+      await Future<void>.delayed(const Duration(seconds: 2));
+    }
     if (mounted) {
       await Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(builder: (_) => const HomeScreen()),
+        MaterialPageRoute<void>(
+          builder: (_) => HomeScreen(pendingLaunch: pendingLaunch),
+        ),
       );
+    }
+  }
+
+  Future<WidgetLaunchAction?> _readPendingWidgetLaunch() async {
+    if (kIsWeb || !Platform.isAndroid) {
+      return null;
+    }
+    try {
+      final widgetUri = await HomeWidget.initiallyLaunchedFromHomeWidget();
+      return WidgetLaunchHandler.parseUri(widgetUri);
+    } catch (_) {
+      return null;
     }
   }
 
