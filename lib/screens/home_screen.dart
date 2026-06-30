@@ -40,7 +40,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   AppTab _selectedTab = AppTab.client;
   bool _isFullScreen = false;
+  bool _agentsChatOpen = false;
   StreamSubscription<Uri?>? _widgetClickSub;
+  final FocusNode _keyboardFocusNode = FocusNode();
+  final GlobalKey<AgentsTabState> _agentsTabKey = GlobalKey<AgentsTabState>();
 
   @override
   void initState() {
@@ -49,11 +52,15 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!kIsWeb && Platform.isAndroid) {
       _widgetClickSub = HomeWidget.widgetClicked.listen(_onWidgetClicked);
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _keyboardFocusNode.requestFocus();
+    });
   }
 
   @override
   void dispose() {
     unawaited(_widgetClickSub?.cancel());
+    _keyboardFocusNode.dispose();
     super.dispose();
   }
 
@@ -236,9 +243,18 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         }
 
-        return KeyboardListener(
-          focusNode: FocusNode()
-            ..requestFocus(), // Request focus so keyboard listener receives events
+        final shouldDelegateAgentsBack =
+            _selectedTab == AppTab.agents && _agentsChatOpen;
+
+        return PopScope(
+          canPop: !shouldDelegateAgentsBack,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop && shouldDelegateAgentsBack) {
+              _agentsTabKey.currentState?.handleBack();
+            }
+          },
+          child: KeyboardListener(
+          focusNode: _keyboardFocusNode,
           onKeyEvent: _handleKeyEvent,
           child: Scaffold(
             appBar: AppBar(
@@ -338,7 +354,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: <Widget>[
                       ClientTab(isFullScreen: _isFullScreen),
                       const ServerTab(),
-                      const AgentsTab(),
+                      AgentsTab(
+                        key: _agentsTabKey,
+                        onChatOpenChanged: (open) {
+                          if (_agentsChatOpen != open) {
+                            setState(() => _agentsChatOpen = open);
+                          }
+                        },
+                      ),
                       const LogViewer(),
                     ],
                   ),
@@ -346,6 +369,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
+        ),
         );
       },
     );

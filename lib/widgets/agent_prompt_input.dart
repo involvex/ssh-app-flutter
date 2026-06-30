@@ -13,6 +13,7 @@ class AgentPromptInput extends StatefulWidget {
     required this.enabled,
     required this.isSending,
     required this.onSubmit,
+    this.contextChips = const <Widget>[],
     super.key,
   });
 
@@ -22,6 +23,7 @@ class AgentPromptInput extends StatefulWidget {
   final bool enabled;
   final bool isSending;
   final ValueChanged<String> onSubmit;
+  final List<Widget> contextChips;
 
   @override
   State<AgentPromptInput> createState() => _AgentPromptInputState();
@@ -34,10 +36,21 @@ class _AgentPromptInputState extends State<AgentPromptInput> {
   bool _showSuggestions = false;
 
   @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_onTextChanged);
+  }
+
+  @override
   void dispose() {
+    _controller.removeListener(_onTextChanged);
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _onTextChanged() {
+    if (mounted) setState(() {});
   }
 
   List<PromptSuggestion> get _suggestions => buildPromptSuggestions(
@@ -46,6 +59,18 @@ class _AgentPromptInputState extends State<AgentPromptInput> {
         agents: widget.agents,
         models: widget.models,
       );
+
+  int _maxLinesForViewport(BuildContext context) {
+    final height = MediaQuery.sizeOf(context).height;
+    const lineHeight = 22.0;
+    final maxFromViewport = (height * 0.25 / lineHeight).floor();
+    return maxFromViewport.clamp(1, 12);
+  }
+
+  double _suggestionMaxHeight(BuildContext context) {
+    final height = MediaQuery.sizeOf(context).height;
+    return (height * 0.2).clamp(80, 160);
+  }
 
   void _updateSuggestions() {
     final visible = isSlashCommand(_controller.text) && _suggestions.isNotEmpty;
@@ -79,40 +104,59 @@ class _AgentPromptInputState extends State<AgentPromptInput> {
   }
 
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
-    if (event is! KeyDownEvent || !_showSuggestions) {
-      return KeyEventResult.ignored;
-    }
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
 
-    final suggestions = _suggestions;
-    if (suggestions.isEmpty) return KeyEventResult.ignored;
+    final shift = HardwareKeyboard.instance.isShiftPressed;
 
-    if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-      setState(() {
-        _selectedSuggestionIndex =
-            (_selectedSuggestionIndex + 1) % suggestions.length;
-      });
+    if (event.logicalKey == LogicalKeyboardKey.enter && shift) {
+      final value = _controller.text;
+      final selection = _controller.selection;
+      final insertAt = selection.baseOffset;
+      final updated = '${value.substring(0, insertAt)}\n'
+          '${value.substring(insertAt)}';
+      _controller.value = TextEditingValue(
+        text: updated,
+        selection: TextSelection.collapsed(offset: insertAt + 1),
+      );
       return KeyEventResult.handled;
     }
 
-    if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-      setState(() {
-        _selectedSuggestionIndex =
-            (_selectedSuggestionIndex - 1 + suggestions.length) %
-                suggestions.length;
-      });
-      return KeyEventResult.handled;
-    }
+    if (_showSuggestions) {
+      final suggestions = _suggestions;
+      if (suggestions.isEmpty) return KeyEventResult.ignored;
 
-    if (event.logicalKey == LogicalKeyboardKey.escape) {
-      setState(() => _showSuggestions = false);
-      return KeyEventResult.handled;
-    }
+      if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+        setState(() {
+          _selectedSuggestionIndex =
+              (_selectedSuggestionIndex + 1) % suggestions.length;
+        });
+        return KeyEventResult.handled;
+      }
 
-    if (event.logicalKey == LogicalKeyboardKey.tab ||
-        (event.logicalKey == LogicalKeyboardKey.enter &&
-            _showSuggestions &&
-            suggestions.isNotEmpty)) {
-      _applySuggestion(suggestions[_selectedSuggestionIndex]);
+      if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+        setState(() {
+          _selectedSuggestionIndex =
+              (_selectedSuggestionIndex - 1 + suggestions.length) %
+                  suggestions.length;
+        });
+        return KeyEventResult.handled;
+      }
+
+      if (event.logicalKey == LogicalKeyboardKey.escape) {
+        setState(() => _showSuggestions = false);
+        return KeyEventResult.handled;
+      }
+
+      if (event.logicalKey == LogicalKeyboardKey.tab ||
+          (event.logicalKey == LogicalKeyboardKey.enter &&
+              suggestions.isNotEmpty)) {
+        _applySuggestion(suggestions[_selectedSuggestionIndex]);
+        return KeyEventResult.handled;
+      }
+    } else if (event.logicalKey == LogicalKeyboardKey.enter &&
+        widget.enabled &&
+        !widget.isSending) {
+      _submit();
       return KeyEventResult.handled;
     }
 
@@ -123,19 +167,31 @@ class _AgentPromptInputState extends State<AgentPromptInput> {
   Widget build(BuildContext context) {
     final suggestions = _suggestions;
     final canSend = widget.enabled && !widget.isSending;
+    final maxLines = _maxLinesForViewport(context);
 
     return Padding(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(4),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (widget.contextChips.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Wrap(
+                spacing: 4,
+                runSpacing: 4,
+                children: widget.contextChips,
+              ),
+            ),
           if (_showSuggestions && suggestions.isNotEmpty)
             Material(
               elevation: 4,
               borderRadius: BorderRadius.circular(8),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 200),
+                constraints: BoxConstraints(
+                  maxHeight: _suggestionMaxHeight(context),
+                ),
                 child: ListView.builder(
                   shrinkWrap: true,
                   itemCount: suggestions.length.clamp(0, 6),
@@ -160,6 +216,7 @@ class _AgentPromptInputState extends State<AgentPromptInput> {
               ),
             ),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(
                 child: Focus(
@@ -168,28 +225,39 @@ class _AgentPromptInputState extends State<AgentPromptInput> {
                     controller: _controller,
                     focusNode: _focusNode,
                     decoration: const InputDecoration(
-                      hintText:
-                          'Send a prompt or /command (e.g. /help, /agent build)',
+                      hintText: 'Prompt or /command · Shift+Enter newline',
                       border: OutlineInputBorder(),
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
                     ),
                     minLines: 1,
-                    maxLines: 4,
+                    maxLines: maxLines,
                     enabled: canSend,
                     onChanged: (_) => _updateSuggestions(),
-                    onSubmitted: canSend ? (_) => _submit() : null,
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              FilledButton(
-                onPressed: canSend ? _submit : null,
-                child: widget.isSending
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.send),
+              const SizedBox(width: 6),
+              SizedBox(
+                width: 40,
+                height: 40,
+                child: FilledButton(
+                  onPressed: canSend ? _submit : null,
+                  style: FilledButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(40, 40),
+                  ),
+                  child: widget.isSending
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send, size: 18),
+                ),
               ),
             ],
           ),

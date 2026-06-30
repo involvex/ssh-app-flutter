@@ -7,8 +7,9 @@ import 'package:network_info_plus/network_info_plus.dart';
 
 import '../models/ssh_profile.dart';
 import '../services/config_service.dart';
-import '../services/widget_profile_service.dart';
 import '../services/network_discovery_service.dart';
+import '../services/app_lifecycle_service.dart';
+import '../services/widget_profile_service.dart';
 import '../models/session_entry.dart';
 import '../utils/terminal_context.dart';
 
@@ -169,11 +170,15 @@ class SSHProvider extends ChangeNotifier {
 
       unawaited(shell.done.then((_) async {
         addLog('Session ${entry.name} closed');
+        if (AppLifecycleService.isInBackground) {
+          entry.disconnectedWhileBackgrounded = true;
+        }
         entry.isConnected = false;
         notifyListeners();
       }));
 
       entry.isConnected = true;
+      entry.shouldReconnectOnResume = true;
       addLog('Connected: ${entry.name}');
       notifyListeners();
 
@@ -206,12 +211,24 @@ class SSHProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> reconnectSession(String sessionId) async {
+    final entry = sessions.firstWhere((s) => s.id == sessionId);
+    entry.shellSession?.close();
+    entry.client?.close();
+    entry.shellSession = null;
+    entry.client = null;
+    entry.terminal = Terminal();
+    await connectSession(sessionId);
+  }
+
   Future<void> disconnectSession(String sessionId) async {
     final entry = sessions.firstWhere((s) => s.id == sessionId,
         orElse: () => throw StateError('Session not found'));
     entry.shellSession?.close();
     entry.client?.close();
     entry.isConnected = false;
+    entry.shouldReconnectOnResume = false;
+    entry.disconnectedWhileBackgrounded = false;
     entry.terminal = Terminal();
     notifyListeners();
   }

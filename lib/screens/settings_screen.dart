@@ -7,6 +7,9 @@ import '../widgets/shortcut_editor.dart';
 import '../widgets/keyboard_shortcut_bar.dart';
 import '../widgets/terminal_font_settings.dart';
 import '../widgets/ai_provider_settings.dart';
+import '../widgets/opencode_config_sheet.dart';
+import '../providers/agent_provider.dart';
+import '../providers/ssh_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -143,6 +146,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               const AiProviderSettings(),
+              const Divider(height: 32),
+              const Text('OpenCode config',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              Consumer2<AgentProvider, SSHProvider>(
+                builder: (context, agents, ssh, child) {
+                  final hasAgent = agents.connections.isNotEmpty;
+                  final hasSsh =
+                      ssh.sessions.any((session) => session.isConnected);
+                  return Card(
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.cloud_sync),
+                          title: const Text('Import from connected server'),
+                          subtitle: const Text(
+                            'Load config from the active OpenCode agent',
+                          ),
+                          enabled: hasAgent,
+                          onTap: hasAgent
+                              ? () => showOpenCodeConfigFromSettings(context)
+                              : null,
+                        ),
+                        const Divider(height: 1, indent: 56),
+                        ListTile(
+                          leading: const Icon(Icons.terminal),
+                          title: const Text('Import from SSH host'),
+                          subtitle: const Text(
+                            'Read ~/.config/opencode from Windows host',
+                          ),
+                          enabled: hasSsh,
+                          onTap: hasSsh
+                              ? () => importOpenCodeConfigViaSsh(context)
+                              : null,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
               const Divider(height: 32),
               const Text('Keyboard Shortcuts',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),

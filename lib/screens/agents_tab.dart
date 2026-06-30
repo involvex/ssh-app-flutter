@@ -2,7 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:opencode_api/opencode_api.dart' show MessageWithParts, Session;
+import 'package:opencode_api/opencode_api.dart' show Session;
 import 'package:provider/provider.dart';
 
 import '../models/agent_connection.dart';
@@ -11,19 +11,23 @@ import '../providers/agent_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/ssh_provider.dart';
 import '../utils/agent_session_utils.dart';
+import '../widgets/agent_message_bubble.dart';
 import '../widgets/agent_permission_dialog.dart';
 import '../widgets/agent_model_provider_sheet.dart';
 import '../widgets/agent_prompt_input.dart';
+import '../widgets/opencode_config_sheet.dart';
 import '../widgets/sftp_directory_picker.dart';
 
 class AgentsTab extends StatefulWidget {
-  const AgentsTab({super.key});
+  const AgentsTab({this.onChatOpenChanged, super.key});
+
+  final ValueChanged<bool>? onChatOpenChanged;
 
   @override
-  State<AgentsTab> createState() => _AgentsTabState();
+  State<AgentsTab> createState() => AgentsTabState();
 }
 
-class _AgentsTabState extends State<AgentsTab> {
+class AgentsTabState extends State<AgentsTab> {
   final TextEditingController _manualUrlController = TextEditingController();
   final TextEditingController _manualPasswordController =
       TextEditingController();
@@ -35,12 +39,24 @@ class _AgentsTabState extends State<AgentsTab> {
   bool get _isDesktopPlatform =>
       !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
 
+  void handleBack() {
+    final agents = Provider.of<AgentProvider>(context, listen: false);
+    final active = agents.activeConnection;
+    if (active?.activeSessionId != null) {
+      agents.clearActiveSession(active!.id);
+    }
+  }
+
   @override
   void dispose() {
     _manualUrlController.dispose();
     _manualPasswordController.dispose();
     _localPasswordController.dispose();
     super.dispose();
+  }
+
+  void _notifyChatOpen(bool open) {
+    widget.onChatOpenChanged?.call(open);
   }
 
   Future<void> _connectProfile(SSHProfile profile) async {
@@ -219,16 +235,21 @@ class _AgentsTabState extends State<AgentsTab> {
         }
 
         if (agents.connections.isEmpty) {
+          _notifyChatOpen(false);
           return _buildDisconnectedView(
               ssh.profiles, settings.defaultAgentPort);
         }
 
         final active = agents.activeConnection;
         if (active == null) {
+          _notifyChatOpen(false);
           return const Center(child: Text('No active agent connection'));
         }
 
         final showingChat = active.activeSessionId != null;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _notifyChatOpen(showingChat);
+        });
 
         return PopScope(
           canPop: !showingChat,
@@ -538,34 +559,43 @@ class _AgentsTabState extends State<AgentsTab> {
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
-            trailing: IconButton(
-              icon: const Icon(Icons.tune),
-              tooltip: 'Model & providers',
-              onPressed: () => showAgentModelProviderSheet(context, active),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    active.collapseToolParts
+                        ? Icons.unfold_more
+                        : Icons.unfold_less,
+                  ),
+                  tooltip: active.collapseToolParts
+                      ? 'Expand tool parts'
+                      : 'Collapse tool parts',
+                  onPressed: () =>
+                      agents.toggleCollapseToolParts(active.id),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.settings),
+                  tooltip: 'OpenCode config',
+                  onPressed: () => showOpenCodeConfigSheet(context, active),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.tune),
+                  tooltip: 'Model & providers',
+                  onPressed: () =>
+                      showAgentModelProviderSheet(context, active),
+                ),
+              ],
             ),
           ),
         ),
-        Expanded(child: _buildChatView(agents, active)),
+        Expanded(
+          child: _AgentChatScrollView(
+            key: ValueKey<String>(sessionId),
+            connection: active,
+          ),
+        ),
       ],
-    );
-  }
-
-  Widget _buildChatView(AgentProvider agents, AgentConnection active) {
-    if (active.isLoadingMessages) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (active.messages.isEmpty) {
-      return const Center(child: Text('No messages yet. Send a prompt below.'));
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(12),
-      itemCount: active.messages.length,
-      itemBuilder: (context, index) {
-        final message = active.messages[index];
-        return _MessageBubble(message: message);
-      },
     );
   }
 
@@ -608,60 +638,145 @@ class _AgentsTabState extends State<AgentsTab> {
   }
 }
 
-class _MessageBubble extends StatelessWidget {
-  const _MessageBubble({required this.message});
+class _AgentChatScrollView extends StatefulWidget {
+  const _AgentChatScrollView({required this.connection, super.key});
 
-  final MessageWithParts message;
+  final AgentConnection connection;
+
+  @override
+  State<_AgentChatScrollView> createState() => _AgentChatScrollViewState();
+}
+
+class _AgentChatScrollViewState extends State<_AgentChatScrollView> {
+  final ScrollController _scrollController = ScrollController();
+  int _lastMessageCount = 0;
+  bool _wasSending = false;
+  bool _showScrollTop = false;
+  bool _showScrollBottom = false;
+
+  static const double _nearEdgeThreshold = 80;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastMessageCount = widget.connection.messages.length;
+    _wasSending = widget.connection.isSending;
+    _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    final atTop = position.pixels <= _nearEdgeThreshold;
+    final atBottom = position.pixels >=
+        position.maxScrollExtent - _nearEdgeThreshold;
+    if (atTop != !_showScrollTop || atBottom != !_showScrollBottom) {
+      setState(() {
+        _showScrollTop = !atTop;
+        _showScrollBottom = !atBottom && position.maxScrollExtent > 0;
+      });
+    }
+  }
+
+  bool _isNearBottom() {
+    if (!_scrollController.hasClients) return true;
+    final position = _scrollController.position;
+    return position.pixels >=
+        position.maxScrollExtent - _nearEdgeThreshold;
+  }
+
+  void _scrollToBottom() {
+    if (!_scrollController.hasClients) return;
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+    );
+  }
+
+  void _scrollToTop() {
+    if (!_scrollController.hasClients) return;
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final role = message.info?.role ?? 'unknown';
-    final isUser = role == 'user';
-    final parts = message.parts ?? [];
+    final connection = widget.connection;
 
-    final textParts = parts
-        .where((p) => p.type == 'text' || p.text != null)
-        .map((p) => p.text ?? p.content ?? '')
-        .where((t) => t.isNotEmpty)
-        .join('\n');
+    if (connection.isLoadingMessages) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-    final toolParts = parts.where((p) => p.type != 'text' && p.text == null);
+    if (connection.messages.isEmpty) {
+      return const Center(
+        child: Text('No messages yet. Send a prompt below.'),
+      );
+    }
 
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.all(12),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
+    final messageCount = connection.messages.length;
+    final isSending = connection.isSending;
+    if (messageCount > _lastMessageCount ||
+        (isSending != _wasSending && isSending)) {
+      final shouldAutoScroll = _isNearBottom();
+      _lastMessageCount = messageCount;
+      _wasSending = isSending;
+      if (shouldAutoScroll) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToBottom();
+          _onScroll();
+        });
+      }
+    }
+
+    return Stack(
+      children: [
+        ListView.builder(
+          controller: _scrollController,
+          padding: const EdgeInsets.all(12),
+          itemCount: connection.messages.length,
+          itemBuilder: (context, index) {
+            final message = connection.messages[index];
+            return AgentMessageBubble(
+              message: message,
+              collapseToolParts: connection.collapseToolParts,
+            );
+          },
         ),
-        decoration: BoxDecoration(
-          color: isUser
-              ? Theme.of(context).colorScheme.primaryContainer
-              : Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              role.toUpperCase(),
-              style: Theme.of(context).textTheme.labelSmall,
+        if (_showScrollTop)
+          Positioned(
+            right: 12,
+            bottom: 64,
+            child: FloatingActionButton.small(
+              heroTag: 'agent_scroll_top',
+              tooltip: 'Scroll to top',
+              onPressed: _scrollToTop,
+              child: const Icon(Icons.arrow_upward),
             ),
-            if (textParts.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              SelectableText(textParts),
-            ],
-            for (final part in toolParts)
-              ExpansionTile(
-                title: Text('[${part.type ?? 'tool'}]'),
-                children: [
-                  SelectableText(part.content ?? part.text ?? ''),
-                ],
-              ),
-          ],
-        ),
-      ),
+          ),
+        if (_showScrollBottom)
+          Positioned(
+            right: 12,
+            bottom: 12,
+            child: FloatingActionButton.small(
+              heroTag: 'agent_scroll_bottom',
+              tooltip: 'Scroll to bottom',
+              onPressed: _scrollToBottom,
+              child: const Icon(Icons.arrow_downward),
+            ),
+          ),
+      ],
     );
   }
 }

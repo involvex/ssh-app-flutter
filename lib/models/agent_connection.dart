@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:opencode_api/opencode_api.dart';
 
 import '../models/agent_model_option.dart';
@@ -24,6 +26,7 @@ class AgentConnection {
     this.configProviders,
     this.selectedModelId,
     this.isLoadingMetadata = false,
+    this.collapseToolParts = true,
   });
 
   final String id;
@@ -44,4 +47,15 @@ class AgentConnection {
   ConfigProvidersResponse? configProviders;
   String? selectedModelId;
   bool isLoadingMetadata;
+  bool collapseToolParts;
+
+  StreamSubscription<Map<String, dynamic>>? eventSub;
+  StreamSubscription<ConnectionEvent>? connectionEventSub;
+
+  void disposeSubscriptions() {
+    unawaited(eventSub?.cancel());
+    unawaited(connectionEventSub?.cancel());
+    eventSub = null;
+    connectionEventSub = null;
+  }
 }

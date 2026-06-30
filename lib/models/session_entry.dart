@@ -14,6 +14,8 @@ class SessionEntry {
   SSHSession? shellSession;
   Terminal terminal;
   bool isConnected;
+  bool disconnectedWhileBackgrounded;
+  bool shouldReconnectOnResume;
 
   SessionEntry({
     required this.name,
@@ -22,7 +24,9 @@ class SessionEntry {
     Terminal? terminal,
   })  : id = id ?? const Uuid().v4(),
         terminal = terminal ?? Terminal(),
-        isConnected = false;
+        isConnected = false,
+        disconnectedWhileBackgrounded = false,
+        shouldReconnectOnResume = false;
 
   void disposeRuntime() {
     shellSession?.close();

@@ -8,6 +8,8 @@ class ConfigService {
   static const String _sshKeysKey = 'ssh_keys';
   static const String _snippetsKey = 'snippets';
   static const String _agentLastDirectoryKey = 'agent_last_directory';
+  static const String _opencodeServerConfigCacheKey =
+      'opencode_server_config_cache';
 
   static SharedPreferences? _prefs;
 
@@ -87,6 +89,21 @@ class ConfigService {
 
   static Future<void> saveAgentLastDirectory(String path) async {
     await prefs.setString(_agentLastDirectoryKey, path);
+  }
+
+  static Future<Map<String, dynamic>?> getOpenCodeServerConfigCache() async {
+    final data = prefs.getString(_opencodeServerConfigCacheKey);
+    if (data == null) return null;
+    return json.decode(data) as Map<String, dynamic>;
+  }
+
+  static Future<void> saveOpenCodeServerConfigCache(
+    Map<String, dynamic> config,
+  ) async {
+    await prefs.setString(
+      _opencodeServerConfigCacheKey,
+      json.encode(config),
+    );
   }
 
   static Future<void> clearAll() async {

@@ -61,7 +61,7 @@ class AgentProvider extends ChangeNotifier {
         isConnected: true,
       );
 
-      service.events.listen((event) => _handleEvent(connection.id, event));
+      _wireConnection(connection);
 
       _connections.add(connection);
       _activeConnectionId = connection.id;
@@ -138,7 +138,7 @@ class AgentProvider extends ChangeNotifier {
         selectedDirectory: directory,
       );
 
-      service.events.listen((event) => _handleEvent(connection.id, event));
+      _wireConnection(connection);
 
       _connections.add(connection);
       _activeConnectionId = connection.id;
@@ -170,6 +170,7 @@ class AgentProvider extends ChangeNotifier {
     if (index == -1) return;
 
     final connection = _connections[index];
+    connection.disposeSubscriptions();
     connection.service.dispose();
     _connections.removeAt(index);
 
@@ -223,6 +224,13 @@ class AgentProvider extends ChangeNotifier {
     if (connection == null) return;
     connection.activeSessionId = null;
     connection.messages = [];
+    notifyListeners();
+  }
+
+  void toggleCollapseToolParts(String connectionId) {
+    final connection = _findConnection(connectionId);
+    if (connection == null) return;
+    connection.collapseToolParts = !connection.collapseToolParts;
     notifyListeners();
   }
 
@@ -403,6 +411,43 @@ class AgentProvider extends ChangeNotifier {
     }
   }
 
+  void _wireConnection(AgentConnection connection) {
+    connection.eventSub = connection.service.events.listen(
+      (event) => _handleEvent(connection.id, event),
+    );
+    connection.connectionEventSub =
+        connection.service.connectionEvents.listen((event) {
+      if (event.type == ConnectionEventType.disconnected) {
+        connection.isConnected = false;
+        onLog?.call(
+          'Agent event stream ended: ${connection.profile.name}',
+        );
+        notifyListeners();
+      }
+    });
+  }
+
+  Future<void> reconnectDisconnectedAgents() async {
+    for (final connection in _connections) {
+      if (connection.isConnected) {
+        await connection.service.reconnectEventsIfNeeded();
+        continue;
+      }
+
+      try {
+        await connection.service.checkHealth();
+        await connection.service.reconnectEvents();
+        connection.isConnected = true;
+        onLog?.call('Agent reconnected: ${connection.profile.name}');
+      } catch (e) {
+        onLog?.call(
+          'Agent reconnect failed for ${connection.profile.name}: $e',
+        );
+      }
+    }
+    notifyListeners();
+  }
+
   Future<void> _loadMetadata(AgentConnection connection) async {
     connection.isLoadingMetadata = true;
     notifyListeners();
@@ -485,6 +530,7 @@ class AgentProvider extends ChangeNotifier {
   @override
   void dispose() {
     for (final connection in _connections) {
+      connection.disposeSubscriptions();
       connection.service.dispose();
     }
     _connections.clear();

@@ -4,6 +4,14 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:opencode_api/opencode_api.dart';
 
+enum ConnectionEventType { disconnected }
+
+class ConnectionEvent {
+  const ConnectionEvent(this.type);
+
+  final ConnectionEventType type;
+}
+
 class OpenCodeConnectionService {
   OpenCodeConnectionService({
     required this.baseUrl,
@@ -19,9 +27,19 @@ class OpenCodeConnectionService {
   late final Opencode _client;
   final StreamController<Map<String, dynamic>> _eventController =
       StreamController<Map<String, dynamic>>.broadcast();
+  final StreamController<ConnectionEvent> _connectionEventController =
+      StreamController<ConnectionEvent>.broadcast();
+
   bool _disposed = false;
+  bool _listening = false;
+  StreamSubscription<List<int>>? _sseSubscription;
 
   Stream<Map<String, dynamic>> get events => _eventController.stream;
+
+  Stream<ConnectionEvent> get connectionEvents =>
+      _connectionEventController.stream;
+
+  bool get isEventStreamActive => _listening;
 
   Opencode get client => _client;
 
@@ -40,6 +58,11 @@ class OpenCodeConnectionService {
   Future<HealthResponse> checkHealth() async {
     return _client.global.getHealth();
   }
+
+  Future<ConfigResponse> getConfig() => _client.config.getConfig();
+
+  Future<ConfigResponse> updateConfig(Map<String, dynamic> body) =>
+      _client.config.updateConfig(body);
 
   Future<String?> getServerPath() async {
     final pathResponse = await _client.path.getPath();
@@ -136,7 +159,21 @@ class OpenCodeConnectionService {
     );
   }
 
+  Future<void> reconnectEvents() async {
+    if (_disposed) return;
+    await _stopEventStream();
+    await _listenToEvents();
+  }
+
+  Future<void> reconnectEventsIfNeeded() async {
+    if (_disposed || _listening) return;
+    await reconnectEvents();
+  }
+
   Future<void> _listenToEvents() async {
+    if (_disposed || _listening) return;
+    _listening = true;
+
     try {
       final response = await _dio.get<ResponseBody>(
         '/event',
@@ -147,40 +184,66 @@ class OpenCodeConnectionService {
       );
 
       final stream = response.data?.stream;
-      if (stream == null || _disposed) return;
+      if (stream == null || _disposed) {
+        _listening = false;
+        return;
+      }
 
       final buffer = StringBuffer();
-      await for (final chunk in stream) {
-        if (_disposed) break;
-        buffer.write(utf8.decode(chunk));
-        final content = buffer.toString();
-        final lines = content.split('\n');
-        buffer.clear();
-        if (!content.endsWith('\n') && lines.isNotEmpty) {
-          buffer.write(lines.removeLast());
-        }
-        for (final line in lines) {
-          if (line.startsWith('data: ')) {
-            final data = line.substring(6).trim();
-            if (data.isEmpty) continue;
-            try {
-              final event = json.decode(data) as Map<String, dynamic>;
-              if (!_eventController.isClosed) {
-                _eventController.add(event);
+      _sseSubscription = stream.listen(
+        (List<int> chunk) {
+          if (_disposed) return;
+          buffer.write(utf8.decode(chunk));
+          final content = buffer.toString();
+          final lines = content.split('\n');
+          buffer.clear();
+          if (!content.endsWith('\n') && lines.isNotEmpty) {
+            buffer.write(lines.removeLast());
+          }
+          for (final line in lines) {
+            if (line.startsWith('data: ')) {
+              final data = line.substring(6).trim();
+              if (data.isEmpty) continue;
+              try {
+                final event = json.decode(data) as Map<String, dynamic>;
+                if (!_eventController.isClosed) {
+                  _eventController.add(event);
+                }
+              } catch (_) {
+                // Skip malformed SSE payloads
               }
-            } catch (_) {
-              // Skip malformed SSE payloads
             }
           }
-        }
-      }
+        },
+        onDone: _handleStreamEnded,
+        onError: (Object error, StackTrace stackTrace) => _handleStreamEnded(),
+        cancelOnError: true,
+      );
     } catch (_) {
-      // Stream ended or failed
+      _listening = false;
+      _handleStreamEnded();
     }
+  }
+
+  void _handleStreamEnded() {
+    _listening = false;
+    if (_disposed || _connectionEventController.isClosed) return;
+    _connectionEventController.add(
+      const ConnectionEvent(ConnectionEventType.disconnected),
+    );
+  }
+
+  Future<void> _stopEventStream() async {
+    _listening = false;
+    await _sseSubscription?.cancel();
+    _sseSubscription = null;
   }
 
   void dispose() {
     _disposed = true;
+    // ignore: unawaited_futures
+    _stopEventStream();
     _eventController.close();
+    _connectionEventController.close();
   }
 }

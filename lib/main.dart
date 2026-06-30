@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'services/config_service.dart';
+import 'services/app_lifecycle_service.dart';
 import 'providers/ssh_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/snippet_provider.dart';
@@ -95,14 +96,16 @@ class MyApp extends StatelessWidget {
             ),
           );
 
-          return MaterialApp(
-            title: 'SSH App',
-            debugShowCheckedModeBanner: false,
-            themeMode: settings.themeMode,
-            theme: lightTheme,
-            darkTheme:
-                settings.appTheme == AppTheme.hacker ? hackerTheme : darkTheme,
-            home: const SplashScreen(),
+          return AppLifecycleHost(
+            child: MaterialApp(
+              title: 'SSH App',
+              debugShowCheckedModeBanner: false,
+              themeMode: settings.themeMode,
+              theme: lightTheme,
+              darkTheme:
+                  settings.appTheme == AppTheme.hacker ? hackerTheme : darkTheme,
+              home: const SplashScreen(),
+            ),
           );
         },
       ),

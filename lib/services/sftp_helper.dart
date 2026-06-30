@@ -1,6 +1,7 @@
 // lib/services/sftp_helper.dart
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:dartssh2/dartssh2.dart';
 
 class SftpHelper {
@@ -49,6 +50,28 @@ class SftpHelper {
       }
     } finally {
       await file.close();
+    }
+  }
+
+  Future<String?> readRemoteText(String remotePath) async {
+    final sftp = await client.sftp();
+    try {
+      final remoteFile =
+          await sftp.open(remotePath, mode: SftpFileOpenMode.read);
+      try {
+        final buffer = BytesBuilder();
+        await for (final chunk in remoteFile.read()) {
+          if (chunk.isNotEmpty) {
+            buffer.add(chunk);
+          }
+        }
+        if (buffer.length == 0) return null;
+        return String.fromCharCodes(buffer.toBytes());
+      } finally {
+        await remoteFile.close();
+      }
+    } catch (_) {
+      return null;
     }
   }
 
