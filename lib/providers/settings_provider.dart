@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/ai_provider.dart';
+import '../models/home_toolbar_action.dart';
 import '../models/keyboard_shortcut.dart';
 import '../services/config_service.dart';
 import '../services/secure_storage_service.dart';
@@ -43,6 +44,8 @@ class SettingsProvider extends ChangeNotifier {
   String _kiloApiKey = '';
   String _opencodeZenModel = AiProviderDefaults.opencodeZenModel;
   String _kiloModel = AiProviderDefaults.kiloModel;
+  Set<HomeToolbarAction> _pinnedToolbarActions =
+      HomeToolbarActionX.defaultPinned;
 
   ThemeMode get themeMode => _themeMode;
   AppTheme get appTheme => _appTheme;
@@ -60,6 +63,10 @@ class SettingsProvider extends ChangeNotifier {
   String get kiloApiKey => _kiloApiKey;
   String get opencodeZenModel => _opencodeZenModel;
   String get kiloModel => _kiloModel;
+  Set<HomeToolbarAction> get pinnedToolbarActions => _pinnedToolbarActions;
+
+  bool isToolbarActionPinned(HomeToolbarAction action) =>
+      _pinnedToolbarActions.contains(action);
 
   String get activeAiApiKey => switch (_aiProvider) {
         AiProvider.opencodeZen => _opencodeZenApiKey,
@@ -152,6 +159,10 @@ class SettingsProvider extends ChangeNotifier {
     _kiloModel =
         settings['kiloModel'] as String? ?? AiProviderDefaults.kiloModel;
 
+    _pinnedToolbarActions = _parsePinnedToolbarActions(
+      settings['pinnedToolbarActions'] as List<dynamic>?,
+    );
+
     _isLoaded = true;
     notifyListeners();
   }
@@ -184,6 +195,41 @@ class SettingsProvider extends ChangeNotifier {
       (e) => e.name == value,
       orElse: () => TerminalFontStyle.normal,
     );
+  }
+
+  static Set<HomeToolbarAction> _parsePinnedToolbarActions(
+    List<dynamic>? raw,
+  ) {
+    if (raw == null || raw.isEmpty) {
+      return HomeToolbarActionX.defaultPinned;
+    }
+    final Set<HomeToolbarAction> parsed = <HomeToolbarAction>{};
+    for (final dynamic entry in raw) {
+      final HomeToolbarAction? action =
+          HomeToolbarActionX.fromStorageKey(entry as String);
+      if (action != null) {
+        parsed.add(action);
+      }
+    }
+    return parsed.isEmpty ? HomeToolbarActionX.defaultPinned : parsed;
+  }
+
+  Future<void> setToolbarActionPinned(
+    HomeToolbarAction action,
+    bool pinned,
+  ) async {
+    if (pinned) {
+      _pinnedToolbarActions = {..._pinnedToolbarActions, action};
+    } else {
+      _pinnedToolbarActions = _pinnedToolbarActions
+          .where((HomeToolbarAction item) => item != action)
+          .toSet();
+    }
+    await _saveSetting(
+      'pinnedToolbarActions',
+      _pinnedToolbarActions.map((HomeToolbarAction item) => item.name).toList(),
+    );
+    notifyListeners();
   }
 
   Future<void> setTerminalFontSize(double size) async {

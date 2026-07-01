@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 import '../services/backup_service.dart';
 import '../widgets/app_about_tile.dart';
+import '../widgets/toolbar_action_settings.dart';
 import '../widgets/theme_picker.dart';
 import '../widgets/shortcut_editor.dart';
 import '../widgets/keyboard_shortcut_bar.dart';
@@ -137,6 +138,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
+              const SizedBox(height: 16),
+              const ToolbarActionSettings(),
               const Divider(height: 32),
               const Text('Terminal',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),

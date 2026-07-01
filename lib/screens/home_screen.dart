@@ -8,6 +8,7 @@ import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:xterm/xterm.dart';
 import 'package:xterm/ui.dart';
+import '../models/home_toolbar_action.dart';
 import '../providers/settings_provider.dart';
 import '../providers/ssh_provider.dart';
 import '../widgets/ssh_server_form.dart';
@@ -27,8 +28,6 @@ import '../services/widget_launch_handler.dart';
 import '../utils/terminal_style_builder.dart';
 
 enum AppTab { client, server, agents, logs }
-
-enum _HomeOverflowAction { snippets, discovery, keys, profiles }
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.pendingLaunch});
@@ -212,17 +211,93 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _handleOverflowAction(_HomeOverflowAction action) {
+  void _handleToolbarAction(HomeToolbarAction action) {
     switch (action) {
-      case _HomeOverflowAction.snippets:
-        _showSnippetConfig();
-      case _HomeOverflowAction.discovery:
-        _showNetworkDiscovery();
-      case _HomeOverflowAction.keys:
-        _showKeyManager();
-      case _HomeOverflowAction.profiles:
+      case HomeToolbarAction.connect:
+        _showConnectionModal();
+      case HomeToolbarAction.profiles:
         _showProfileManager();
+      case HomeToolbarAction.snippets:
+        _showSnippetConfig();
+      case HomeToolbarAction.discovery:
+        _showNetworkDiscovery();
+      case HomeToolbarAction.keys:
+        _showKeyManager();
     }
+  }
+
+  List<Widget> _buildAppBarActions(SettingsProvider settings) {
+    final List<HomeToolbarAction> unpinned = HomeToolbarActionX.displayOrder
+        .where((HomeToolbarAction action) =>
+            !settings.isToolbarActionPinned(action))
+        .toList();
+
+    final List<Widget> actions = <Widget>[
+      Consumer<SSHProvider>(
+        builder: (context, ssh, child) {
+          if (ssh.sessions.any((s) => s.isConnected) &&
+              _selectedTab == AppTab.client) {
+            return IconButton(
+              icon: Icon(
+                _isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
+              ),
+              tooltip: _isFullScreen ? 'Exit Full Screen' : 'Full Screen',
+              onPressed: () => setState(() => _isFullScreen = !_isFullScreen),
+            );
+          }
+          return const SizedBox.shrink();
+        },
+      ),
+    ];
+
+    for (final HomeToolbarAction action in HomeToolbarActionX.displayOrder) {
+      if (!settings.isToolbarActionPinned(action)) {
+        continue;
+      }
+      actions.add(
+        IconButton(
+          icon: Icon(action.icon),
+          tooltip: action.tooltip,
+          onPressed: () => _handleToolbarAction(action),
+        ),
+      );
+    }
+
+    if (unpinned.isNotEmpty) {
+      actions.add(
+        PopupMenuButton<HomeToolbarAction>(
+          tooltip: 'More',
+          onSelected: _handleToolbarAction,
+          itemBuilder: (BuildContext context) =>
+              unpinned.map((HomeToolbarAction action) {
+            return PopupMenuItem<HomeToolbarAction>(
+              value: action,
+              child: ListTile(
+                leading: Icon(action.icon),
+                title: Text(action.label),
+                contentPadding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+              ),
+            );
+          }).toList(),
+        ),
+      );
+    }
+
+    actions.add(
+      IconButton(
+        icon: const Icon(Icons.settings),
+        tooltip: 'Settings',
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const SettingsScreen()),
+          );
+        },
+      ),
+    );
+
+    return actions;
   }
 
   List<AppTab> _visibleTabs(SettingsProvider settings) {
@@ -269,144 +344,67 @@ class _HomeScreenState extends State<HomeScreen> {
             }
           },
           child: KeyboardListener(
-          focusNode: _keyboardFocusNode,
-          onKeyEvent: _handleKeyEvent,
-          child: Scaffold(
-            appBar: AppBar(
-              actions: <Widget>[
-                Consumer<SSHProvider>(
-                  builder: (context, ssh, child) {
-                    if (ssh.sessions.any((s) => s.isConnected) &&
-                        _selectedTab == AppTab.client) {
-                      return IconButton(
-                        icon: Icon(_isFullScreen
-                            ? Icons.fullscreen_exit
-                            : Icons.fullscreen),
-                        tooltip:
-                            _isFullScreen ? 'Exit Full Screen' : 'Full Screen',
-                        onPressed: () =>
-                            setState(() => _isFullScreen = !_isFullScreen),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  tooltip: 'Connect',
-                  onPressed: _showConnectionModal,
-                ),
-                PopupMenuButton<_HomeOverflowAction>(
-                  tooltip: 'More',
-                  onSelected: _handleOverflowAction,
-                  itemBuilder: (BuildContext context) =>
-                      <PopupMenuEntry<_HomeOverflowAction>>[
-                    const PopupMenuItem<_HomeOverflowAction>(
-                      value: _HomeOverflowAction.snippets,
-                      child: ListTile(
-                        leading: Icon(Icons.code),
-                        title: Text('Snippets'),
-                        contentPadding: EdgeInsets.zero,
-                        visualDensity: VisualDensity.compact,
-                      ),
+            focusNode: _keyboardFocusNode,
+            onKeyEvent: _handleKeyEvent,
+            child: Scaffold(
+              appBar: AppBar(
+                actions: _buildAppBarActions(settings),
+              ),
+              bottomNavigationBar: _isFullScreen
+                  ? null
+                  : NavigationBar(
+                      selectedIndex: navIndex,
+                      onDestinationSelected: (index) {
+                        setState(() {
+                          _selectedTab = tabs[index];
+                        });
+                      },
+                      destinations: tabs.map((tab) {
+                        return switch (tab) {
+                          AppTab.client => const NavigationDestination(
+                              icon: Icon(Icons.computer),
+                              label: 'Client',
+                            ),
+                          AppTab.server => const NavigationDestination(
+                              icon: Icon(Icons.dns),
+                              label: 'Server',
+                            ),
+                          AppTab.agents => const NavigationDestination(
+                              icon: Icon(Icons.smart_toy),
+                              label: 'Agents',
+                            ),
+                          AppTab.logs => const NavigationDestination(
+                              icon: Icon(Icons.article),
+                              label: 'Logs',
+                            ),
+                        };
+                      }).toList(),
                     ),
-                    const PopupMenuItem<_HomeOverflowAction>(
-                      value: _HomeOverflowAction.discovery,
-                      child: ListTile(
-                        leading: Icon(Icons.search),
-                        title: Text('Network Discovery'),
-                        contentPadding: EdgeInsets.zero,
-                        visualDensity: VisualDensity.compact,
-                      ),
+              body: Column(
+                children: [
+                  if (!_isFullScreen) const KeyboardShortcutBar(),
+                  Expanded(
+                    child: IndexedStack(
+                      index: _selectedTab.index,
+                      children: <Widget>[
+                        ClientTab(isFullScreen: _isFullScreen),
+                        const ServerTab(),
+                        AgentsTab(
+                          key: _agentsTabKey,
+                          onChatOpenChanged: (open) {
+                            if (_agentsChatOpen != open) {
+                              setState(() => _agentsChatOpen = open);
+                            }
+                          },
+                        ),
+                        const LogViewer(),
+                      ],
                     ),
-                    const PopupMenuItem<_HomeOverflowAction>(
-                      value: _HomeOverflowAction.keys,
-                      child: ListTile(
-                        leading: Icon(Icons.key),
-                        title: Text('Keys'),
-                        contentPadding: EdgeInsets.zero,
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ),
-                    const PopupMenuItem<_HomeOverflowAction>(
-                      value: _HomeOverflowAction.profiles,
-                      child: ListTile(
-                        leading: Icon(Icons.person),
-                        title: Text('Profiles'),
-                        contentPadding: EdgeInsets.zero,
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ),
-                  ],
-                ),
-                IconButton(
-                  icon: const Icon(Icons.settings),
-                  tooltip: 'Settings',
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SettingsScreen()),
-                    );
-                  },
-                ),
-              ],
-            ),
-            bottomNavigationBar: _isFullScreen
-                ? null
-                : NavigationBar(
-                    selectedIndex: navIndex,
-                    onDestinationSelected: (index) {
-                      setState(() {
-                        _selectedTab = tabs[index];
-                      });
-                    },
-                    destinations: tabs.map((tab) {
-                      return switch (tab) {
-                        AppTab.client => const NavigationDestination(
-                            icon: Icon(Icons.computer),
-                            label: 'Client',
-                          ),
-                        AppTab.server => const NavigationDestination(
-                            icon: Icon(Icons.dns),
-                            label: 'Server',
-                          ),
-                        AppTab.agents => const NavigationDestination(
-                            icon: Icon(Icons.smart_toy),
-                            label: 'Agents',
-                          ),
-                        AppTab.logs => const NavigationDestination(
-                            icon: Icon(Icons.article),
-                            label: 'Logs',
-                          ),
-                      };
-                    }).toList(),
                   ),
-            body: Column(
-              children: [
-                if (!_isFullScreen) const KeyboardShortcutBar(),
-                Expanded(
-                  child: IndexedStack(
-                    index: _selectedTab.index,
-                    children: <Widget>[
-                      ClientTab(isFullScreen: _isFullScreen),
-                      const ServerTab(),
-                      AgentsTab(
-                        key: _agentsTabKey,
-                        onChatOpenChanged: (open) {
-                          if (_agentsChatOpen != open) {
-                            setState(() => _agentsChatOpen = open);
-                          }
-                        },
-                      ),
-                      const LogViewer(),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
         );
       },
     );
