@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 import '../services/backup_service.dart';
+import '../widgets/app_about_tile.dart';
 import '../widgets/theme_picker.dart';
 import '../widgets/shortcut_editor.dart';
 import '../widgets/keyboard_shortcut_bar.dart';
@@ -247,22 +248,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Text('About',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
-              const Card(
-                child: Column(
-                  children: [
-                    ListTile(
-                      leading: Icon(Icons.info_outline),
-                      title: Text('SSH App'),
-                      subtitle: Text('Version 1.0.0'),
-                    ),
-                    ListTile(
-                      leading: Icon(Icons.code),
-                      title: Text('Built with Flutter'),
-                      subtitle: Text('Dartssh2, xterm, Provider'),
-                    ),
-                  ],
-                ),
-              ),
+              const AppAboutTile(),
             ],
           );
         },

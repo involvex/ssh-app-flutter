@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:home_widget/home_widget.dart';
 
+import '../constants/app_metadata.dart';
 import 'home_screen.dart';
 import '../services/config_service.dart';
 import '../services/widget_launch_handler.dart';
@@ -80,7 +81,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const SizedBox(height: 32),
             const Text(
-              'SSH App',
+              kAppDisplayName,
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,

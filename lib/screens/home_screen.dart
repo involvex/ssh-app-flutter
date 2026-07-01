@@ -8,8 +8,8 @@ import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:xterm/xterm.dart';
 import 'package:xterm/ui.dart';
-import '../providers/ssh_provider.dart';
 import '../providers/settings_provider.dart';
+import '../providers/ssh_provider.dart';
 import '../widgets/ssh_server_form.dart';
 import '../widgets/log_viewer.dart';
 import '../widgets/profile_manager.dart';
@@ -27,6 +27,8 @@ import '../services/widget_launch_handler.dart';
 import '../utils/terminal_style_builder.dart';
 
 enum AppTab { client, server, agents, logs }
+
+enum _HomeOverflowAction { snippets, discovery, keys, profiles }
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.pendingLaunch});
@@ -210,6 +212,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _handleOverflowAction(_HomeOverflowAction action) {
+    switch (action) {
+      case _HomeOverflowAction.snippets:
+        _showSnippetConfig();
+      case _HomeOverflowAction.discovery:
+        _showNetworkDiscovery();
+      case _HomeOverflowAction.keys:
+        _showKeyManager();
+      case _HomeOverflowAction.profiles:
+        _showProfileManager();
+    }
+  }
+
   List<AppTab> _visibleTabs(SettingsProvider settings) {
     return <AppTab>[
       AppTab.client,
@@ -258,7 +273,6 @@ class _HomeScreenState extends State<HomeScreen> {
           onKeyEvent: _handleKeyEvent,
           child: Scaffold(
             appBar: AppBar(
-              title: const Text('SSH App'),
               actions: <Widget>[
                 Consumer<SSHProvider>(
                   builder: (context, ssh, child) {
@@ -278,29 +292,52 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 ),
                 IconButton(
-                  icon: const Icon(Icons.code),
-                  tooltip: 'Manage Snippets',
-                  onPressed: _showSnippetConfig,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.search),
-                  tooltip: 'Network Discovery',
-                  onPressed: _showNetworkDiscovery,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.key),
-                  tooltip: 'Keys',
-                  onPressed: _showKeyManager,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.person),
-                  tooltip: 'Profiles',
-                  onPressed: _showProfileManager,
-                ),
-                IconButton(
                   icon: const Icon(Icons.add),
                   tooltip: 'Connect',
                   onPressed: _showConnectionModal,
+                ),
+                PopupMenuButton<_HomeOverflowAction>(
+                  tooltip: 'More',
+                  onSelected: _handleOverflowAction,
+                  itemBuilder: (BuildContext context) =>
+                      <PopupMenuEntry<_HomeOverflowAction>>[
+                    const PopupMenuItem<_HomeOverflowAction>(
+                      value: _HomeOverflowAction.snippets,
+                      child: ListTile(
+                        leading: Icon(Icons.code),
+                        title: Text('Snippets'),
+                        contentPadding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                    const PopupMenuItem<_HomeOverflowAction>(
+                      value: _HomeOverflowAction.discovery,
+                      child: ListTile(
+                        leading: Icon(Icons.search),
+                        title: Text('Network Discovery'),
+                        contentPadding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                    const PopupMenuItem<_HomeOverflowAction>(
+                      value: _HomeOverflowAction.keys,
+                      child: ListTile(
+                        leading: Icon(Icons.key),
+                        title: Text('Keys'),
+                        contentPadding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                    const PopupMenuItem<_HomeOverflowAction>(
+                      value: _HomeOverflowAction.profiles,
+                      child: ListTile(
+                        leading: Icon(Icons.person),
+                        title: Text('Profiles'),
+                        contentPadding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                  ],
                 ),
                 IconButton(
                   icon: const Icon(Icons.settings),

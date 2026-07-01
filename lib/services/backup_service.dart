@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'config_service.dart';
+import '../constants/app_metadata.dart';
 import 'secure_storage_service.dart';
 import 'widget_profile_service.dart';
 
@@ -33,7 +34,7 @@ class BackupService {
     await SharePlus.instance.share(
       ShareParams(
         files: [XFile(file.path)],
-        subject: 'SSH App Backup',
+        subject: '$kAppDisplayName Backup',
       ),
     );
   }

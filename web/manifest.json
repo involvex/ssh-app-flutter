@@ -1,11 +1,11 @@
 {
-    "name": "ssh_app",
-    "short_name": "ssh_app",
+    "name": "PocketShell",
+    "short_name": "PocketShell",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "SSH & agent in your pocket",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

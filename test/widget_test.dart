@@ -8,16 +8,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:ssh_app/constants/app_metadata.dart';
+
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build a minimal app with the same top-level title to avoid running the full startup sequence.
     await tester.pumpWidget(MaterialApp(
       home: Scaffold(
-        appBar: AppBar(title: const Text('SSH App')),
+        appBar: AppBar(title: const Text(kAppDisplayName)),
       ),
     ));
 
     // Verify the app builds and shows the main title.
-    expect(find.text('SSH App'), findsOneWidget);
+    expect(find.text(kAppDisplayName), findsOneWidget);
   });
 }

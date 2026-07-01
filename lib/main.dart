@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'services/config_service.dart';
-import 'services/app_lifecycle_service.dart';
-import 'providers/ssh_provider.dart';
+import 'constants/app_metadata.dart';
+import 'providers/agent_provider.dart';
 import 'providers/settings_provider.dart';
 import 'providers/snippet_provider.dart';
-import 'providers/agent_provider.dart';
+import 'providers/ssh_provider.dart';
 import 'screens/splash_screen.dart';
+import 'services/app_lifecycle_service.dart';
+import 'services/config_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -98,7 +99,7 @@ class MyApp extends StatelessWidget {
 
           return AppLifecycleHost(
             child: MaterialApp(
-              title: 'SSH App',
+              title: kAppDisplayName,
               debugShowCheckedModeBanner: false,
               themeMode: settings.themeMode,
               theme: lightTheme,

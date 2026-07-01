@@ -47,7 +47,7 @@ class ConnectionForegroundService : Service() {
         }
 
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("SSH App")
+            .setContentTitle("PocketShell")
             .setContentText(label)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentIntent(pendingIntent)
