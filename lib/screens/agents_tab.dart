@@ -566,7 +566,10 @@ class AgentsTabState extends State<AgentsTab> {
                           currentModel,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(
                                 color: Theme.of(context).colorScheme.outline,
                               ),
                         ),
@@ -582,8 +585,7 @@ class AgentsTabState extends State<AgentsTab> {
                   tooltip: active.collapseToolParts
                       ? 'Expand tool parts'
                       : 'Collapse tool parts',
-                  onPressed: () =>
-                      agents.toggleCollapseToolParts(active.id),
+                  onPressed: () => agents.toggleCollapseToolParts(active.id),
                 ),
                 PopupMenuButton<String>(
                   tooltip: 'Chat options',
@@ -705,8 +707,8 @@ class _AgentChatScrollViewState extends State<_AgentChatScrollView> {
     if (!_scrollController.hasClients) return;
     final position = _scrollController.position;
     final atTop = position.pixels <= _nearEdgeThreshold;
-    final atBottom = position.pixels >=
-        position.maxScrollExtent - _nearEdgeThreshold;
+    final atBottom =
+        position.pixels >= position.maxScrollExtent - _nearEdgeThreshold;
     if (atTop != !_showScrollTop || atBottom != !_showScrollBottom) {
       setState(() {
         _showScrollTop = !atTop;
@@ -718,8 +720,7 @@ class _AgentChatScrollViewState extends State<_AgentChatScrollView> {
   bool _isNearBottom() {
     if (!_scrollController.hasClients) return true;
     final position = _scrollController.position;
-    return position.pixels >=
-        position.maxScrollExtent - _nearEdgeThreshold;
+    return position.pixels >= position.maxScrollExtent - _nearEdgeThreshold;
   }
 
   void _scrollToBottom() {

@@ -19,7 +19,8 @@ List<AgentMessageGroup> groupAgentMessages(List<MessageWithParts> messages) {
   for (final message in messages) {
     final role = message.info?.role ?? 'unknown';
     if (groups.isEmpty || groups.last.role != role) {
-      groups.add(AgentMessageGroup(role: role, messages: <MessageWithParts>[message]));
+      groups.add(
+          AgentMessageGroup(role: role, messages: <MessageWithParts>[message]));
     } else {
       groups.last.messages.add(message);
     }

@@ -82,8 +82,7 @@ class AppLifecycleService with WidgetsBindingObserver {
     AgentProvider agents,
   ) async {
     final sshCount = ssh.sessions.where((s) => s.isConnected).length;
-    final agentCount =
-        agents.connections.where((c) => c.isConnected).length;
+    final agentCount = agents.connections.where((c) => c.isConnected).length;
     await ConnectionForegroundService.syncActiveConnections(
       sshCount + agentCount,
     );

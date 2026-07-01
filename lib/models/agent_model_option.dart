@@ -7,9 +7,8 @@ class AgentModelOption {
   final String providerId;
   final String modelId;
 
-  String get commandValue => modelId.contains('/')
-      ? modelId
-      : '$providerId/$modelId';
+  String get commandValue =>
+      modelId.contains('/') ? modelId : '$providerId/$modelId';
 
   String get displayLabel => commandValue;
 

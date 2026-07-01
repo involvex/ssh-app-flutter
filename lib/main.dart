@@ -103,8 +103,9 @@ class MyApp extends StatelessWidget {
               debugShowCheckedModeBanner: false,
               themeMode: settings.themeMode,
               theme: lightTheme,
-              darkTheme:
-                  settings.appTheme == AppTheme.hacker ? hackerTheme : darkTheme,
+              darkTheme: settings.appTheme == AppTheme.hacker
+                  ? hackerTheme
+                  : darkTheme,
               home: const SplashScreen(),
             ),
           );

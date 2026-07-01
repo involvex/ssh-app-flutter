@@ -38,12 +38,10 @@ bool isConnectCommandInput(String input) {
 List<Command> filterCommandsByPrefix(List<Command> commands, String prefix) {
   if (prefix.isEmpty) return commands;
   final lower = prefix.toLowerCase();
-  return commands
-      .where((Command command) {
-        final name = command.name ?? command.id ?? '';
-        return name.toLowerCase().startsWith(lower);
-      })
-      .toList();
+  return commands.where((Command command) {
+    final name = command.name ?? command.id ?? '';
+    return name.toLowerCase().startsWith(lower);
+  }).toList();
 }
 
 List<String> agentNameSuggestions(List<Agent> agents, String prefix) {
@@ -51,7 +49,8 @@ List<String> agentNameSuggestions(List<Agent> agents, String prefix) {
   return agents
       .map((Agent agent) => agent.name ?? agent.id ?? '')
       .where((String name) => name.isNotEmpty)
-      .where((String name) => lower.isEmpty || name.toLowerCase().startsWith(lower))
+      .where((String name) =>
+          lower.isEmpty || name.toLowerCase().startsWith(lower))
       .toList();
 }
 
@@ -111,7 +110,8 @@ String? resolveCurrentModelId({
   return defaults.values.first;
 }
 
-bool isProviderConnected(Provider provider, ProviderListResponse? providerInfo) {
+bool isProviderConnected(
+    Provider provider, ProviderListResponse? providerInfo) {
   if (provider.connected == true) return true;
   final providerId = provider.id;
   if (providerId == null) return false;
@@ -165,16 +165,14 @@ List<PromptSuggestion> buildPromptSuggestions({
         .toList();
   }
 
-  return filterCommandsByPrefix(commands, commandPrefix)
-      .map(
-        (Command command) {
-          final name = command.name ?? command.id ?? '';
-          return PromptSuggestion(
-            label: '/$name',
-            insertText: '/$name',
-            description: command.description,
-          );
-        },
-      )
-      .toList();
+  return filterCommandsByPrefix(commands, commandPrefix).map(
+    (Command command) {
+      final name = command.name ?? command.id ?? '';
+      return PromptSuggestion(
+        label: '/$name',
+        insertText: '/$name',
+        description: command.description,
+      );
+    },
+  ).toList();
 }

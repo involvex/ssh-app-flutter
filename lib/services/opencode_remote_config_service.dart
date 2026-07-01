@@ -108,9 +108,8 @@ class OpenCodeRemoteConfigService {
     }
 
     final server = raw['server'];
-    final serverMap = server is Map
-        ? Map<String, dynamic>.from(server)
-        : <String, dynamic>{};
+    final serverMap =
+        server is Map ? Map<String, dynamic>.from(server) : <String, dynamic>{};
 
     int? agentPort;
     final portValue = serverMap['port'] ?? raw['port'] ?? raw['agentPort'];

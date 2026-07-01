@@ -125,7 +125,8 @@ class OpenCodeConnectionService {
 
   Future<List<Agent>> getAgents() => _client.agents.getAgents();
 
-  Future<ProviderListResponse> getProviders() => _client.provider.getProviders();
+  Future<ProviderListResponse> getProviders() =>
+      _client.provider.getProviders();
 
   Future<ConfigProvidersResponse> getConfigProviders() =>
       _client.config.getConfigProviders();

@@ -165,8 +165,7 @@ class _OpenCodeConfigSheetState extends State<_OpenCodeConfigSheet> {
       agentPort: remote.agentPort ?? profile.agentPort,
       password: remote.password ?? profile.password,
     );
-    await Provider.of<SSHProvider>(context, listen: false)
-        .saveProfile(updated);
+    await Provider.of<SSHProvider>(context, listen: false).saveProfile(updated);
 
     if (!mounted) return;
     if (remote.directory != null && remote.directory!.isNotEmpty) {
@@ -230,7 +229,8 @@ class _OpenCodeConfigSheetState extends State<_OpenCodeConfigSheet> {
                               title: 'Providers',
                               body: _prettyJson(
                                 _config?.providers ??
-                                    _cached?['providers'] as Map<String, dynamic>?,
+                                    _cached?['providers']
+                                        as Map<String, dynamic>?,
                               ),
                             ),
                             _Section(

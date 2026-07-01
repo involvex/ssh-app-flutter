@@ -116,7 +116,8 @@ class _AgentModelProviderSheetState extends State<AgentModelProviderSheet> {
           maxChildSize: 0.95,
           builder: (context, scrollController) {
             return Material(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(16)),
               child: Column(
                 children: [
                   Padding(
@@ -134,12 +135,14 @@ class _AgentModelProviderSheetState extends State<AgentModelProviderSheet> {
                         ),
                         IconButton(
                           tooltip: 'Refresh',
-                          onPressed: connection.isLoadingMetadata ? null : _refresh,
+                          onPressed:
+                              connection.isLoadingMetadata ? null : _refresh,
                           icon: connection.isLoadingMetadata
                               ? const SizedBox(
                                   width: 18,
                                   height: 18,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : const Icon(Icons.refresh),
                         ),
@@ -236,7 +239,8 @@ class _AgentModelProviderSheetState extends State<AgentModelProviderSheet> {
                               ? const SizedBox(
                                   width: 18,
                                   height: 18,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : const Text('Save & connect'),
                         ),
@@ -271,7 +275,8 @@ class _AgentModelProviderSheetState extends State<AgentModelProviderSheet> {
                             (MapEntry<String, List<AgentModelOption>> entry) {
                               return <Widget>[
                                 Padding(
-                                  padding: const EdgeInsets.only(top: 8, bottom: 4),
+                                  padding:
+                                      const EdgeInsets.only(top: 8, bottom: 4),
                                   child: Text(
                                     entry.key,
                                     style:
@@ -294,7 +299,8 @@ class _AgentModelProviderSheetState extends State<AgentModelProviderSheet> {
                                         : null,
                                     onTap: connection.activeSessionId == null
                                         ? null
-                                        : () => _selectModel(option.commandValue),
+                                        : () =>
+                                            _selectModel(option.commandValue),
                                   );
                                 }),
                               ];

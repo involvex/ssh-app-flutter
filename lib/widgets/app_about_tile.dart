@@ -22,7 +22,8 @@ class _AppAboutTileState extends State<AppAboutTile> {
         children: [
           FutureBuilder<PackageInfo>(
             future: _packageInfoFuture,
-            builder: (BuildContext context, AsyncSnapshot<PackageInfo> snapshot) {
+            builder:
+                (BuildContext context, AsyncSnapshot<PackageInfo> snapshot) {
               final String versionLabel = snapshot.hasData
                   ? 'Version ${snapshot.data!.version}'
                   : 'Version …';
